@@ -560,14 +560,14 @@ Considere a entrega concluída quando:
 - [x] Aplicação abre em `http://localhost:3000` e o backend responde em `/api/v1/health`
 - [x] Provedor Go responde a uma chamada real de teste
 - [x] Correção de 4096 tokens aplicada e validada com currículo longo
-- [ ] Ciclo completo validado: upload → vaga → tailoring → revisão → PDF
+- [x] Ciclo completo validado: upload → vaga → tailoring → revisão → PDF
 - [x] `feat/job-url` concluída
 - [x] `feat/gap-interview` concluída
 - [x] `feat/docx-export` concluída
 - [x] `feat/wp-prompt-pack` concluída
 - [x] `feat/pt-br-review` concluída
 - [x] `feat/edit-mode-pt-br` concluída
-- [ ] `start.ps1`, `sync-upstream.ps1` e `setup.ps1` funcionando
+- [x] `start.ps1`, `sync-upstream.ps1` e `setup.ps1` funcionando
 - [x] README do fork com instruções próprias e atribuição ao projeto original
 
 ---

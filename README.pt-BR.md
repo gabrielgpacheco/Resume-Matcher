@@ -122,6 +122,7 @@ Modelos servidos via `/chat/completions` nesse gateway (ex.: `glm-5.3-flash`, `g
 | 2026-11-17 | funcionalidade | Packs de vocabulário de domínio: um pack opcional de WordPress/PHP/WooCommerce para a personalização, detectado pela descrição da vaga ou forçado nas Configurações. Ele só reformula evidências que o currículo já mostra; requisitos ausentes continuam na entrevista de lacunas. |
 | 2026-11-17 | melhoria | Ajuste de português do Brasil: a interface em pt-BR usa termos brasileiros (modelo, arquivo, tela), cartas de apresentação e mensagens de contato são instruídas a evitar português de Portugal, e os intervalos de datas em PDF/DOCX mostram meses em português e "Atual" quando o idioma do conteúdo é `pt`. |
 | 2026-11-17 | funcionalidade | Sugestões do Modo Edição seguem o idioma do currículo: quando nenhum idioma de conteúdo foi escolhido nas Configurações, enriquecimento, Melhorar escrita e regeneração detectam português do Brasil vs inglês pelo texto do currículo (idiomas falados são ignorados). Uma escolha explícita continua prevalecendo. |
+| 2026-11-17 | correção | O `setup.ps1` agora instala as ferramentas de teste/lint (`uv sync --extra dev`); o `uv sync` simples removia pytest e ruff. O `SETUP.md` tinha o mesmo comando errado (`--group dev`). |
 
 <a id="sponsors"></a>
 

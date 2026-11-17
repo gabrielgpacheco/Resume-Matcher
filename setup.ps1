@@ -8,7 +8,7 @@
 #   4. Cria o .env a partir do .env.example (se nao existir)
 #   5. uv sync (backend) e npm install (frontend)
 #
-# Pre-requisitos: git, gh CLI logado, Python >= 3.14, uv, Node >= 20.
+# Pre-requisitos: git, gh CLI logado, Python >= 3.14, uv, Node 26.13.1 (ver .nvmrc).
 # Uso:  powershell -ExecutionPolicy Bypass -File .\setup.ps1
 
 $ErrorActionPreference = "Stop"
@@ -64,9 +64,9 @@ if (-not (Test-Path $envPath)) {
 }
 
 # 5. Dependencias
-Write-Step "Instalando dependencias do backend (uv sync)"
+Write-Step "Instalando dependencias do backend (uv sync --extra dev)"
 Set-Location (Join-Path $root "apps\backend")
-uv sync
+uv sync --extra dev
 
 Write-Step "Instalando dependencias do frontend (npm install)"
 Set-Location (Join-Path $root "apps\frontend")
