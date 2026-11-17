@@ -45,6 +45,9 @@ uv.lock
 **/data/chatgpt_credentials.lock
 # PDFs the resume-matcher command exports
 **/data/exports/
+# Uploaded resume documents (personal data) — never commit
+**/data/*.pdf
+**/data/*.docx
 # Job descriptions saved for a coding agent (see jobs/README.md)
 /jobs/*
 !/jobs/README.md
