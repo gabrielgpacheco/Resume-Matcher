@@ -16,6 +16,7 @@ from app.llm import (
     _normalize_api_base,
     _openai_compatible_supports_json_mode,
     _supports_temperature,
+    _uses_opencode_go_gateway,
     _uses_opencode_zen_hy3,
     get_model_name,
     get_safe_max_tokens,
@@ -1134,6 +1135,78 @@ class TestOpenCodeZenHy3Route:
             assert _uses_opencode_zen_hy3(
                 _compatible(api_base="https://zen.example.com/zen/v1")
             )
+
+
+class TestOpenCodeGoGateway:
+    """The Go subscription gateway must match its host + path exactly.
+
+    Go models (``glm-*``, ``kimi-*``, ``deepseek-*``, ...) are not in LiteLLM's
+    registry, so ``get_safe_max_tokens`` would otherwise collapse them to the
+    4096 fallback and truncate long resume JSON. The gateway match lifts them to
+    the full structured-output budget, exactly like the Zen HY3 route.
+    """
+
+    @pytest.mark.parametrize(
+        "api_base",
+        [
+            "https://opencode.ai/inference/go",
+            "https://opencode.ai/inference/go/",
+            "https://opencode.ai/inference/go/openai/v1",
+            "https://opencode.ai/inference/go/openai/v1/",
+            "  https://opencode.ai/inference/go/openai/v1  ",
+            "https://OpenCode.AI/inference/go/openai/v1",
+        ],
+    )
+    def test_gateway_path_forms_match(self, api_base):
+        assert _uses_opencode_go_gateway(
+            _compatible(model="glm-5.3-flash", api_base=api_base)
+        )
+
+    @pytest.mark.parametrize(
+        "api_base",
+        [
+            "https://evil-opencode.ai/inference/go/openai/v1",  # lookalike host
+            "https://opencode.ai.evil.com/inference/go/openai/v1",  # host as label
+            "https://go.opencode.ai/inference/go/openai/v1",  # subdomain
+            "https://opencode.ai/inference/gopher/openai/v1",  # prefixed path
+            "https://opencode.ai/zen/v1",  # right host, different gateway
+            "https://opencode.ai",  # right host, no path
+            "https://example.com/inference/go/openai/v1",  # unrelated host
+        ],
+    )
+    def test_lookalike_hosts_and_paths_do_not_match(self, api_base):
+        assert not _uses_opencode_go_gateway(_compatible(api_base=api_base))
+
+    def test_other_providers_never_match(self):
+        assert not _uses_opencode_go_gateway(
+            LLMConfig(
+                provider="openai",
+                model="glm-5.3-flash",
+                api_key="k",
+                api_base="https://opencode.ai/inference/go/openai/v1",
+            )
+        )
+
+    def test_missing_api_base_does_not_match(self):
+        assert not _uses_opencode_go_gateway(_compatible(api_base=None))
+
+    def test_route_reads_the_path_constant(self):
+        """Matching must come from the constant, not an inlined literal."""
+        with patch("app.llm.OPENCODE_GO_PATH_PREFIX", "/inference/other"):
+            assert not _uses_opencode_go_gateway(
+                _compatible(api_base="https://opencode.ai/inference/go/openai/v1")
+            )
+            assert _uses_opencode_go_gateway(
+                _compatible(api_base="https://opencode.ai/inference/other/openai/v1")
+            )
+
+    @patch("app.llm.litellm.get_model_info", side_effect=Exception("unknown model"))
+    def test_go_models_get_full_json_budget_when_unknown(self, _mock_model_info):
+        config = _compatible(
+            model="glm-5.3-flash",
+            api_base="https://opencode.ai/inference/go/openai/v1",
+        )
+        assert get_safe_max_tokens("openai/glm-5.3-flash", config=config) == 8192
 
 
 class TestJsonModeVerifiedHosts:

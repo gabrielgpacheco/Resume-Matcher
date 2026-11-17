@@ -126,6 +126,8 @@ DEFAULT_JSON_MAX_TOKENS = 8192
 OPENCODE_ZEN_HOST: str = "opencode.ai"
 #: Path prefix identifying the Zen gateway on that host (``/zen``, ``/zen/v1``, ...).
 OPENCODE_ZEN_PATH_PREFIX: str = "/zen"
+#: Path prefix identifying the OpenCode Go gateway on that host (``/inference/go``).
+OPENCODE_GO_PATH_PREFIX: str = "/inference/go"
 #: Lowercased model names served by Zen's HY3-compatible route.
 OPENCODE_ZEN_HY3_MODELS: frozenset[str] = frozenset({"hy3", "hy3-free"})
 
@@ -336,6 +338,30 @@ def _uses_opencode_zen_hy3(config: LLMConfig) -> bool:
     path = parsed.path.rstrip("/")
     return path == OPENCODE_ZEN_PATH_PREFIX or path.startswith(
         f"{OPENCODE_ZEN_PATH_PREFIX}/"
+    )
+
+
+def _uses_opencode_go_gateway(config: LLMConfig) -> bool:
+    """Return whether a request targets the OpenCode Go subscription gateway.
+
+    The Go gateway serves a set of current-gen models under
+    ``https://opencode.ai/inference/go/...`` that LiteLLM does not map (they are
+    subscription models, not public API models). They all accept a full
+    ``DEFAULT_JSON_MAX_TOKENS`` output budget, so ``get_safe_max_tokens`` treats
+    them like the Zen HY3 route instead of collapsing to ``FALLBACK_MAX_TOKENS``.
+
+    Scoped to the exact host + path prefix so an unrelated OpenAI-compatible
+    server on ``opencode.ai`` (or a lookalike path such as ``/inference/gopher``)
+    never inherits the higher fallback.
+    """
+    if config.provider != "openai_compatible" or not isinstance(config.api_base, str):
+        return False
+    parsed = urlsplit(config.api_base.strip())
+    if (parsed.hostname or "").lower() != OPENCODE_ZEN_HOST:
+        return False
+    path = parsed.path.rstrip("/")
+    return path == OPENCODE_GO_PATH_PREFIX or path.startswith(
+        f"{OPENCODE_GO_PATH_PREFIX}/"
     )
 
 
@@ -1449,9 +1475,10 @@ def get_safe_max_tokens(
     what the backend actually supports.
 
     If the model is not in the registry (e.g. custom Ollama models), it falls
-    back to a conservative limit. The verified OpenCode Zen HY3 route is an
-    exception because JSON extraction disables reasoning for that model and
-    needs the full structured-output budget.
+    back to a conservative limit. The OpenCode Go gateway (``/inference/go``)
+    and the verified Zen HY3 route are exceptions: their subscription models
+    are absent from the registry but accept the full structured-output budget,
+    so they keep ``DEFAULT_JSON_MAX_TOKENS`` instead of ``FALLBACK_MAX_TOKENS``.
 
     Args:
         model_name: LiteLLM-formatted model name (from get_model_name).
@@ -1481,7 +1508,8 @@ def get_safe_max_tokens(
 
     fallback_limit = (
         DEFAULT_JSON_MAX_TOKENS
-        if config is not None and _uses_opencode_zen_hy3(config)
+        if config is not None
+        and (_uses_opencode_zen_hy3(config) or _uses_opencode_go_gateway(config))
         else FALLBACK_MAX_TOKENS
     )
     safe = min(safe_requested, fallback_limit)
