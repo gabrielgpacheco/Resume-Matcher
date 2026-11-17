@@ -2677,7 +2677,7 @@ async def download_resume_docx(resume_id: str) -> Response:
     if not has_renderable_content(resume_data):
         raise HTTPException(status_code=409, detail=UNPARSED_RESUME_DOCX_DETAIL)
 
-    docx_bytes = build_resume_docx(resume_data)
+    docx_bytes = build_resume_docx(resume_data, get_content_language())
     # The id comes from the URL; keep it out of the header when it holds anything
     # but filename-safe characters.
     safe_id = re.sub(r"[^A-Za-z0-9._-]", "_", resume_id)[:80] or "resume"

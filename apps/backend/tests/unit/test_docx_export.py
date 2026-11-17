@@ -210,6 +210,26 @@ def test_date_ranges_are_normalized(stored: str | None, expected: str) -> None:
     assert format_date_range(stored) == expected
 
 
+@pytest.mark.parametrize(
+    ("stored", "expected"),
+    [
+        ("Jan 2021 - Present", "jan 2021 - Atual"),
+        ("January 2021 - December 2024", "janeiro 2021 - dezembro 2024"),
+        ("Sept 2020 - Oct 2021", "set 2020 - out 2021"),
+        ("Mar 2023", "mar 2023"),
+        ("2023 - 2025", "2023 - 2025"),
+        ("Atual", "Atual"),
+    ],
+)
+def test_brazilian_portuguese_date_ranges(stored: str, expected: str) -> None:
+    assert format_date_range(stored, "pt") == expected
+
+
+def test_other_languages_keep_the_english_months() -> None:
+    assert format_date_range("Jan 2021 - Present", "en") == "Jan 2021 - Present"
+    assert format_date_range("Jan 2021 - Present", "") == "Jan 2021 - Present"
+
+
 def test_group_skills_matches_the_template_rules() -> None:
     assert group_skills(["Python", "Docker"]) == [
         {"label": None, "items": ["Python", "Docker"]}

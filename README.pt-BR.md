@@ -120,6 +120,7 @@ Modelos servidos via `/chat/completions` nesse gateway (ex.: `glm-5.3-flash`, `g
 | 2026-11-17 | funcionalidade | Entrevista de lacunas: a tela de personalização pergunta sobre as palavras-chave da vaga que o currículo principal não mostra e aplica só o que você confirmar; a resposta "não" vira sugestão de estudo. As respostas ficam guardadas por vaga. |
 | 2026-11-17 | funcionalidade | Exportar qualquer currículo como documento Word (`.docx`) amigável a ATS: coluna única, títulos reais, sem tabelas, mesma ordem/visibilidade de seções e estilos de marcadores da visualização. Disponível no visualizador de currículo e no construtor. |
 | 2026-11-17 | funcionalidade | Packs de vocabulário de domínio: um pack opcional de WordPress/PHP/WooCommerce para a personalização, detectado pela descrição da vaga ou forçado nas Configurações. Ele só reformula evidências que o currículo já mostra; requisitos ausentes continuam na entrevista de lacunas. |
+| 2026-11-17 | melhoria | Ajuste de português do Brasil: a interface em pt-BR usa termos brasileiros (modelo, arquivo, tela), cartas de apresentação e mensagens de contato são instruídas a evitar português de Portugal, e os intervalos de datas em PDF/DOCX mostram meses em português e "Atual" quando o idioma do conteúdo é `pt`. |
 
 <a id="sponsors"></a>
 

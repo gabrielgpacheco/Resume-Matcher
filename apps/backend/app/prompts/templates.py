@@ -248,6 +248,7 @@ IMPROVE_RESUME_PROMPT_NUDGE = """Lightly nudge this resume toward the job descri
 {critical_truthfulness_rules}
 
 {domain_pack_section}IMPORTANT: Generate ALL text content (summary, descriptions, skills) in {output_language}.
+If the output language is Brazilian Portuguese, use Brazilian Portuguese spelling and vocabulary (arquivo, tela, usuário, equipe), never European Portuguese.
 Do NOT include personalInfo in your output - it will be preserved from the original resume.
 
 Rules:
@@ -280,6 +281,7 @@ IMPROVE_RESUME_PROMPT_KEYWORDS = """Enhance this resume with relevant keywords f
 {critical_truthfulness_rules}
 
 {domain_pack_section}IMPORTANT: Generate ALL text content (summary, descriptions, skills) in {output_language}.
+If the output language is Brazilian Portuguese, use Brazilian Portuguese spelling and vocabulary (arquivo, tela, usuário, equipe), never European Portuguese.
 Do NOT include personalInfo in your output - it will be preserved from the original resume.
 
 Rules:
@@ -310,6 +312,7 @@ IMPROVE_RESUME_PROMPT_FULL = """Tailor this resume for the job. Output ONLY the 
 {critical_truthfulness_rules}
 
 {domain_pack_section}IMPORTANT: Generate ALL text content (summary, descriptions, skills) in {output_language}.
+If the output language is Brazilian Portuguese, use Brazilian Portuguese spelling and vocabulary (arquivo, tela, usuário, equipe), never European Portuguese.
 Do NOT include personalInfo in your output - it will be preserved from the original resume.
 
 Rules:
@@ -342,6 +345,7 @@ IMPROVE_RESUME_PROMPT_HEAVY = """Rewrite this resume for the job. Output ONLY th
 {critical_truthfulness_rules}
 
 {domain_pack_section}IMPORTANT: Generate ALL text content (summary, descriptions, skills) in {output_language}.
+If the output language is Brazilian Portuguese, use Brazilian Portuguese spelling and vocabulary (arquivo, tela, usuário, equipe), never European Portuguese.
 Do NOT include personalInfo in your output - it will be preserved from the original resume.
 
 Rules:
@@ -406,6 +410,7 @@ IMPROVE_RESUME_PROMPT = IMPROVE_RESUME_PROMPT_FULL
 COVER_LETTER_PROMPT = """Write a tailored cover letter for this job application.
 
 IMPORTANT: Write in {output_language}.
+If the output language is Brazilian Portuguese, use Brazilian Portuguese spelling and vocabulary (arquivo, tela, usuário, equipe), never European Portuguese.
 
 Job Description:
 {job_description}
@@ -440,6 +445,7 @@ Output plain text only. No JSON, no markdown formatting."""
 OUTREACH_MESSAGE_PROMPT = """Generate a cold outreach message for LinkedIn or email about this job opportunity.
 
 IMPORTANT: Write in {output_language}.
+If the output language is Brazilian Portuguese, use Brazilian Portuguese spelling and vocabulary (arquivo, tela, usuário, equipe), never European Portuguese.
 
 Job Description:
 {job_description}
@@ -462,6 +468,7 @@ Output plain text only. No JSON, no markdown formatting."""
 FOLLOW_UP_EMAIL_PROMPT = """Write a short follow-up email about a job application that has had no reply yet.
 
 IMPORTANT: Write in {output_language}.
+If the output language is Brazilian Portuguese, use Brazilian Portuguese spelling and vocabulary (arquivo, tela, usuário, equipe), never European Portuguese.
 
 Application:
 {application_context}
@@ -491,6 +498,7 @@ Output plain text only. No JSON, no markdown formatting."""
 INTERVIEW_PREP_PROMPT = """Generate structured interview preparation for this tailored resume and job.
 
 IMPORTANT: Write in {output_language}.
+If the output language is Brazilian Portuguese, use Brazilian Portuguese spelling and vocabulary (arquivo, tela, usuário, equipe), never European Portuguese.
 Do NOT translate JSON property names. Keep every JSON key exactly as shown in the schema; translate only string values.
 
 Job Description:
@@ -545,6 +553,7 @@ Content requirements:
 GENERATE_TITLE_PROMPT = """Extract the job title and company name from this job description.
 
 IMPORTANT: Write in {output_language}.
+If the output language is Brazilian Portuguese, use Brazilian Portuguese spelling and vocabulary (arquivo, tela, usuário, equipe), never European Portuguese.
 
 Job Description:
 {job_description}
@@ -644,7 +653,7 @@ DIFF_IMPROVE_PROMPT = """Given this resume and job description, output a JSON ob
 4. {strategy_instruction}
 5. Each change MUST include the original text (copied exactly) so it can be verified
 6. For each change, explain WHY it helps match the job description
-7. Generate all new text in {output_language}
+7. Generate all new text in {output_language}. When that language is Brazilian Portuguese, use Brazilian Portuguese spelling and vocabulary (arquivo, tela, usuário, equipe), never European Portuguese
 8. Do not use em dash characters
 9. Keep changes minimal and targeted; do not rewrite content that already aligns well
 10. Exception to rule 2: you may add a skill only if it appears in the verified skill targets below
