@@ -79,6 +79,44 @@ Siga-nos no [LinkedIn](https://www.linkedin.com/company/resume-matcher/) para no
 
 Dê uma estrela no repositório para apoiar o desenvolvimento e ser avisado de novas versões.
 
+<a id="fork-changes"></a>
+
+## Mudanças deste fork
+
+Este fork mantém a licença Apache-2.0 e a atribuição ao projeto original, adicionando suporte de primeira classe ao gateway de assinatura [OpenCode Go](https://opencode.ai/docs/console/go/) e algumas correções necessárias para que ele funcione. As mudanças são listadas aqui conforme são validadas.
+
+### Provedor OpenCode Go
+
+Use a sua assinatura OpenCode Go como provedor de IA. Configure em **Configurações** (escolha "OpenAI Compatible") ou em `apps/backend/.env`:
+
+```env
+LLM_PROVIDER=openai_compatible
+LLM_MODEL=glm-5.3-flash
+LLM_API_BASE=https://opencode.ai/inference/go/openai/v1
+LLM_API_KEY=<sua chave do console>
+```
+
+Modelos servidos via `/chat/completions` nesse gateway (ex.: `glm-5.3-flash`, `glm-5.3`, `kimi-k2.7-code`, `deepseek-v4.1-flash`) funcionam sem configuração adicional.
+
+### Scripts de desenvolvimento local
+
+| Script | Função |
+|--------|--------|
+| `setup.ps1` | Configuração inicial idempotente: fork, clone, remotes, `.env`, `uv sync`, `npm install`. |
+| `start.ps1` | Sobe backend + frontend em janelas separadas e abre o navegador. |
+| `sync-upstream.ps1` | `git fetch upstream` + merge de `upstream/main`, preservando as mudanças deste fork. |
+
+### Changelog
+
+| Data | Tipo | Mudança |
+|------|------|---------|
+| 2026-11-16 | correção | Modelos do OpenCode Go não são mais limitados a 4096 tokens de saída, o que truncava o JSON de currículos longos. |
+| 2026-11-16 | correção | Envio do header `x-opencode-session` (e um User-Agent próprio) exigido pelo gateway Go; sem ele as requisições eram rejeitadas com `400 MissingSessionID`. |
+| 2026-11-16 | correção | Resolução da chave de API do `.env` para `openai_compatible` quando o base URL aponta para o gateway Go (ela era retida pela proteção contra servidor local). |
+| 2026-11-16 | melhoria | JSON mode (`response_format`) habilitado para o gateway Go (verificado no endpoint real). |
+| 2026-11-16 | ferramenta | Adicionados `setup.ps1`, `start.ps1`, `sync-upstream.ps1`. |
+| 2026-11-16 | segurança | PDFs/DOCX de currículo enviados ignorados no `.gitignore` (dados pessoais nunca são commitados). |
+
 <a id="sponsors"></a>
 
 ## Patrocinadores
@@ -282,6 +320,7 @@ Abra **<http://localhost:3000>** e configure o seu provedor de IA em Configuraç
 | **OpenRouter** | Nuvem | Acesso a vários modelos |
 | **DeepSeek** | Nuvem | DeepSeek Chat |
 | **Groq** | Nuvem | Llama 3.3 70B, GPT-OSS |
+| **OpenCode Go** *(este fork)* | Nuvem | Use sua assinatura [OpenCode Go](https://opencode.ai/docs/console/go/) (GLM, Kimi, DeepSeek, LongCat, MiniMax, …) pelo gateway compatível com OpenAI. Defina `LLM_PROVIDER=openai_compatible`, `LLM_API_BASE=https://opencode.ai/inference/go/openai/v1` e `LLM_MODEL=glm-5.3-flash`. Veja [Mudanças do fork](#fork-changes). |
 
 ### Deploy com Docker
 

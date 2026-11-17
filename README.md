@@ -79,6 +79,44 @@ Follow us on [LinkedIn](https://www.linkedin.com/company/resume-matcher/) for up
 
 Star the repo to support development and get notified of new releases.
 
+<a id="fork-changes"></a>
+
+## Fork changes
+
+This fork keeps the upstream Apache-2.0 license and attribution while adding first-class support for the [OpenCode Go](https://opencode.ai/docs/console/go/) subscription gateway and a few fixes that were required to make it work. Changes are listed here as they are validated.
+
+### OpenCode Go provider
+
+Use your OpenCode Go subscription as the AI provider. Configure it in **Settings** (pick "OpenAI Compatible") or in `apps/backend/.env`:
+
+```env
+LLM_PROVIDER=openai_compatible
+LLM_MODEL=glm-5.3-flash
+LLM_API_BASE=https://opencode.ai/inference/go/openai/v1
+LLM_API_KEY=<your console key>
+```
+
+Models served over `/chat/completions` on that gateway (e.g. `glm-5.3-flash`, `glm-5.3`, `kimi-k2.7-code`, `deepseek-v4.1-flash`) work out of the box.
+
+### Local development scripts
+
+| Script | Purpose |
+|--------|---------|
+| `setup.ps1` | Idempotent first-time setup: fork, clone, remotes, `.env`, `uv sync`, `npm install`. |
+| `start.ps1` | Starts backend + frontend in separate windows and opens the browser. |
+| `sync-upstream.ps1` | `git fetch upstream` + merge `upstream/main`, preserving this fork's changes. |
+
+### Changelog
+
+| Date | Type | Change |
+|------|------|--------|
+| 2026-11-16 | fix | OpenCode Go models no longer collapsed to a 4096-token output cap, which truncated long resume JSON. |
+| 2026-11-16 | fix | Send the `x-opencode-session` header (and a non-generic User-Agent) that the Go gateway requires; requests were rejected with `400 MissingSessionID` without it. |
+| 2026-11-16 | fix | Resolve the `.env` API key for `openai_compatible` when the base URL targets the Go gateway (it was withheld by the local-server key guard). |
+| 2026-11-16 | improvement | Enable `response_format` JSON mode for the Go gateway (verified against the live endpoint). |
+| 2026-11-16 | tooling | Added `setup.ps1`, `start.ps1`, `sync-upstream.ps1`. |
+| 2026-11-16 | security | Ignore uploaded resume PDFs/DOCX in `.gitignore` (personal data is never committed). |
+
 ## Sponsors
 
 ![sponsors](assets/sponsors.webp)
@@ -280,6 +318,7 @@ Open **<http://localhost:3000>** and configure your AI provider in Settings.
 | **OpenRouter** | Cloud | Access to multiple models |
 | **DeepSeek** | Cloud | DeepSeek Chat |
 | **Groq** | Cloud | Llama 3.3 70B, GPT-OSS |
+| **OpenCode Go** *(this fork)* | Cloud | Use your [OpenCode Go](https://opencode.ai/docs/console/go/) subscription (GLM, Kimi, DeepSeek, LongCat, MiniMax, …) through its OpenAI-compatible gateway. Set `LLM_PROVIDER=openai_compatible`, `LLM_API_BASE=https://opencode.ai/inference/go/openai/v1`, and `LLM_MODEL=glm-5.3-flash`. See [Fork changes](#fork-changes). |
 
 ### Docker Deployment
 
