@@ -639,7 +639,7 @@ uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
 uv sync
 
 # Install with dev dependencies (for testing)
-uv sync --group dev
+uv sync --extra dev
 
 # Run tests
 uv run pytest
