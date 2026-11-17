@@ -381,6 +381,14 @@ responsabilidade ausente; lacunas continuam sendo tratadas pela entrevista de 6.
 **Aceite:** interface sem termos de pt-PT ("ficheiro", "ecrã", "utilizador") e sem strings
 não traduzidas; PDF e DOCX com datas no formato brasileiro.
 
+**Implementada:** varredura do `pt-BR.json` sem termos de pt-PT ("Template" virou "Modelo");
+`LANGUAGE_NAMES["pt"]` confirmado como "Brazilian Portuguese" e `pt` presente em
+`SUPPORTED_LANGUAGES`; nova linha nos prompts de personalização, carta, outreach e follow-up
+proibindo português de Portugal; datas em pt-BR: `format_date_range(..., language)` no DOCX
+(router passa `get_content_language()`) e `lib/utils/date-range.ts` no PDF (aplica aos `years` do
+currículo antes dos templates), com meses em português e "Atual". O idioma de conteúdo padrão
+continua `en` (comportamento upstream); o pt-BR é escolhido em Configurações.
+
 ### 6.6 `feat/edit-mode-pt-br` — Edit Mode detecta o idioma do currículo e sugere em pt-BR
 
 **Objetivo:** no **Resume Builder (Modo Edição)**, as sugestões de texto geradas por IA
@@ -547,7 +555,7 @@ Considere a entrega concluída quando:
 - [x] `feat/gap-interview` concluída
 - [x] `feat/docx-export` concluída
 - [x] `feat/wp-prompt-pack` concluída
-- [ ] `feat/pt-br-review` concluída
+- [x] `feat/pt-br-review` concluída
 - [ ] `feat/edit-mode-pt-br` concluída
 - [ ] `start.ps1`, `sync-upstream.ps1` e `setup.ps1` funcionando
 - [ ] README do fork com instruções próprias e atribuição ao projeto original

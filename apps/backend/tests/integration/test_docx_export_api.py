@@ -124,3 +124,27 @@ async def test_structurally_empty_data_is_a_409(isolated_db: Any) -> None:
         response = await client.get(f"/api/v1/resumes/{resume['resume_id']}/docx")
 
     assert response.status_code == 409
+
+
+async def test_portuguese_content_writes_brazilian_dates(
+    isolated_db: Any, sample_resume: dict[str, Any], monkeypatch: Any
+) -> None:
+    from app.routers import resumes
+
+    monkeypatch.setattr(resumes, "get_content_language", lambda: "pt")
+    resume = await isolated_db.create_resume(
+        content="{}",
+        content_type="json",
+        processed_data=sample_resume,
+        processing_status="ready",
+    )
+
+    async with _client() as client:
+        response = await client.get(f"/api/v1/resumes/{resume['resume_id']}/docx")
+
+    assert response.status_code == 200, response.text
+    texts = [
+        paragraph.text for paragraph in Document(BytesIO(response.content)).paragraphs
+    ]
+    assert any("jan 2021 - Atual" in text for text in texts)
+    assert not any("Present" in text for text in texts)

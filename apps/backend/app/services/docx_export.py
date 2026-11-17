@@ -57,17 +57,67 @@ _MONTH_YEAR_PAIR = re.compile(
 )
 _YEAR_PAIR = re.compile(r"(\d{4})\s+(\d{4})")
 _MONTH_YEAR_TO_PRESENT = re.compile(
-    r"(?<![a-z])([a-z]+\.?\s+\d{4})\s+(Present|Current|Now|Ongoing)",
+    r"(?<![a-z])([a-z]+\.?\s+\d{4})\s+(Present|Current|Now|Ongoing|Atual)",
     re.IGNORECASE,
 )
 
+#: English month names and abbreviations to Brazilian Portuguese.
+_PT_MONTHS = {
+    "january": "janeiro",
+    "february": "fevereiro",
+    "march": "março",
+    "april": "abril",
+    "may": "maio",
+    "june": "junho",
+    "july": "julho",
+    "august": "agosto",
+    "september": "setembro",
+    "october": "outubro",
+    "november": "novembro",
+    "december": "dezembro",
+    "jan": "jan",
+    "feb": "fev",
+    "mar": "mar",
+    "apr": "abr",
+    "jun": "jun",
+    "jul": "jul",
+    "aug": "ago",
+    "sep": "set",
+    "sept": "set",
+    "oct": "out",
+    "nov": "nov",
+    "dec": "dez",
+}
+_PT_PRESENT = "Atual"
 
-def format_date_range(value: str | None) -> str:
+
+def _localize_pt_br(text: str) -> str:
+    """Translate the date words to Brazilian Portuguese, keeping the layout."""
+
+    def month(match: re.Match[str]) -> str:
+        return _PT_MONTHS.get(match.group(0).lower().rstrip("."), match.group(0))
+
+    localized = re.sub(
+        r"(?<![A-Za-z])(" + "|".join(_PT_MONTHS) + r")\.?(?![A-Za-z])",
+        month,
+        text,
+        flags=re.IGNORECASE,
+    )
+    return re.sub(
+        r"(?<![A-Za-z])(Present|Current|Now|Ongoing|Atual)(?![A-Za-z])",
+        _PT_PRESENT,
+        localized,
+        flags=re.IGNORECASE,
+    )
+
+
+def format_date_range(value: str | None, language: str = "en") -> str:
     """Normalize a stored date range the way the print templates do.
 
     Any dash becomes ``-``, spacing is normalized, and two dates written without
     a separator ("2024 2025", "Jun 2025 Present") get one. ATS parsers expect a
-    consistent range.
+    consistent range. ``language="pt"`` also translates the month names and
+    "Present" to Brazilian Portuguese ("jan 2021 - Atual").
     """
     if not value:
         return ""
@@ -83,7 +133,8 @@ def format_date_range(value: str | None) -> str:
     text = _MONTH_YEAR_PAIR.sub(r"\1 - \2", text)
     text = _YEAR_PAIR.sub(r"\1 - \2", text)
     text = _MONTH_YEAR_TO_PRESENT.sub(r"\1 - \2", text)
-    return text.strip()
+    text = text.strip()
+    return _localize_pt_br(text) if language.lower().startswith("pt") else text
 
 
 class _InlineHtmlParser(HTMLParser):
@@ -315,7 +366,9 @@ def _render_summary(doc: DocxDocument, resume: ResumeData, heading: str) -> None
     _add_rich_text(paragraph, resume.summary.strip())
 
 
-def _render_experience(doc: DocxDocument, resume: ResumeData, heading: str) -> None:
+def _render_experience(
+    doc: DocxDocument, resume: ResumeData, heading: str, language: str = "en"
+) -> None:
     full = [entry for entry in resume.workExperience if not entry.condensed]
     condensed = [entry for entry in resume.workExperience if entry.condensed]
     if not full and not condensed:
@@ -323,7 +376,7 @@ def _render_experience(doc: DocxDocument, resume: ResumeData, heading: str) -> N
 
     _add_section_heading(doc, heading)
     for entry in full:
-        _render_experience_entry(doc, entry)
+        _render_experience_entry(doc, entry, language)
     if condensed:
         subheading = doc.add_paragraph()
         subheading.paragraph_format.space_before = Pt(5)
@@ -337,7 +390,7 @@ def _render_experience(doc: DocxDocument, resume: ResumeData, heading: str) -> N
                 for part in (
                     entry.title.strip(),
                     entry.company.strip(),
-                    format_date_range(entry.years),
+                    format_date_range(entry.years, language),
                 )
                 if part
             )
@@ -347,23 +400,35 @@ def _render_experience(doc: DocxDocument, resume: ResumeData, heading: str) -> N
                 paragraph.add_run(line)
 
 
-def _render_experience_entry(doc: DocxDocument, entry: Experience) -> None:
-    _add_entry_header(doc, entry.title.strip(), format_date_range(entry.years))
+def _render_experience_entry(
+    doc: DocxDocument, entry: Experience, language: str = "en"
+) -> None:
+    _add_entry_header(
+        doc, entry.title.strip(), format_date_range(entry.years, language)
+    )
     if entry.company.strip() or entry.location:
         _add_two_column_line(doc, entry.company.strip(), (entry.location or "").strip())
     _add_description(doc, entry.description, entry.descriptionStyles)
 
 
-def _render_education(doc: DocxDocument, resume: ResumeData, heading: str) -> None:
+def _render_education(
+    doc: DocxDocument, resume: ResumeData, heading: str, language: str = "en"
+) -> None:
     if not resume.education:
         return
     _add_section_heading(doc, heading)
     for entry in resume.education:
-        _render_education_entry(doc, entry)
+        _render_education_entry(doc, entry, language)
 
 
-def _render_education_entry(doc: DocxDocument, entry: Education) -> None:
-    _add_entry_header(doc, entry.institution.strip(), format_date_range(entry.years))
+def _render_education_entry(
+    doc: DocxDocument, entry: Education, language: str = "en"
+) -> None:
+    _add_entry_header(
+        doc,
+        entry.institution.strip(),
+        format_date_range(entry.years, language),
+    )
     if entry.degree.strip():
         paragraph = doc.add_paragraph()
         paragraph.paragraph_format.space_after = Pt(0)
@@ -379,15 +444,19 @@ def _link_label(url: str) -> str:
     return label.rstrip("/")
 
 
-def _render_projects(doc: DocxDocument, resume: ResumeData, heading: str) -> None:
+def _render_projects(
+    doc: DocxDocument, resume: ResumeData, heading: str, language: str = "en"
+) -> None:
     if not resume.personalProjects:
         return
     _add_section_heading(doc, heading)
     for project in resume.personalProjects:
-        _render_project_entry(doc, project)
+        _render_project_entry(doc, project, language)
 
 
-def _render_project_entry(doc: DocxDocument, project: Project) -> None:
+def _render_project_entry(
+    doc: DocxDocument, project: Project, language: str = "en"
+) -> None:
     links = [_link_label(link) for link in (project.github, project.website) if link]
     links = [link for link in links if link]
 
@@ -399,7 +468,7 @@ def _render_project_entry(doc: DocxDocument, project: Project) -> None:
         paragraph.add_run(project.name.strip()).bold = True
     if links:
         paragraph.add_run("  " + " | ".join(links))
-    years = format_date_range(project.years)
+    years = format_date_range(project.years, language)
     if years:
         paragraph.paragraph_format.tab_stops.add_tab_stop(
             _content_width(doc), WD_TAB_ALIGNMENT.RIGHT
@@ -456,7 +525,11 @@ def _custom_has_content(section_type: SectionType, data: CustomSection) -> bool:
 
 
 def _render_custom_section(
-    doc: DocxDocument, section: SectionMeta, data: CustomSection, heading: str
+    doc: DocxDocument,
+    section: SectionMeta,
+    data: CustomSection,
+    heading: str,
+    language: str = "en",
 ) -> None:
     if not _custom_has_content(section.sectionType, data):
         return
@@ -471,7 +544,9 @@ def _render_custom_section(
         return
     for item in data.items or []:
         _add_entry_header(
-            doc, (item.title or "").strip(), format_date_range(item.years)
+            doc,
+            (item.title or "").strip(),
+            format_date_range(item.years, language),
         )
         if (item.subtitle or "").strip() or (item.location or "").strip():
             _add_two_column_line(
@@ -500,23 +575,26 @@ def _default_display_name(key: str) -> str:
 
 
 def _render_section(
-    doc: DocxDocument, resume: ResumeData, section: SectionMeta
+    doc: DocxDocument,
+    resume: ResumeData,
+    section: SectionMeta,
+    language: str = "en",
 ) -> None:
     title = section.displayName.strip() or _default_display_name(section.key)
     if section.key == "summary":
         _render_summary(doc, resume, title)
     elif section.key == "workExperience":
-        _render_experience(doc, resume, title)
+        _render_experience(doc, resume, title, language)
     elif section.key == "education":
-        _render_education(doc, resume, title)
+        _render_education(doc, resume, title, language)
     elif section.key == "personalProjects":
-        _render_projects(doc, resume, title)
+        _render_projects(doc, resume, title, language)
     elif section.key == "additional":
         _render_additional(doc, resume, title)
     elif not section.isDefault:
         custom = resume.customSections.get(section.key)
         if custom is not None:
-            _render_custom_section(doc, section, custom, title)
+            _render_custom_section(doc, section, custom, title, language)
 
 
 def _render_header(doc: DocxDocument, resume: ResumeData) -> None:
@@ -595,11 +673,12 @@ def has_renderable_content(resume: ResumeData) -> bool:
     )
 
 
-def build_resume_docx(data: ResumeData | dict[str, Any]) -> bytes:
+def build_resume_docx(data: ResumeData | dict[str, Any], language: str = "en") -> bytes:
     """Build the .docx bytes for a resume.
 
     Args:
         data: Validated ``ResumeData`` or the raw dict stored on the resume.
+        language: Content language; ``pt`` formats dates in Brazilian Portuguese.
 
     Returns:
         The complete .docx file as bytes.
@@ -616,7 +695,7 @@ def build_resume_docx(data: ResumeData | dict[str, Any]) -> bytes:
     for section in _section_meta(resume):
         if section.key == "personalInfo":
             continue
-        _render_section(doc, resume, section)
+        _render_section(doc, resume, section, language)
 
     buffer = BytesIO()
     doc.save(buffer)

@@ -121,6 +121,45 @@ class TestCoverLetterWritingApproach:
         assert "Never invent a name" in COVER_LETTER_PROMPT
 
 
+class TestBrazilianPortugueseGuidance:
+    def test_pt_maps_to_brazilian_portuguese(self):
+        from app.prompts.templates import get_language_name
+
+        assert get_language_name("pt") == "Brazilian Portuguese"
+
+    def test_generated_text_prompts_name_the_brazilian_variant(self):
+        from app.prompts.templates import (
+            IMPROVE_RESUME_PROMPTS,
+            OUTREACH_MESSAGE_PROMPT,
+        )
+
+        note = (
+            "If the output language is Brazilian Portuguese, use Brazilian "
+            "Portuguese spelling and vocabulary (arquivo, tela, usuário, equipe), "
+            "never European Portuguese."
+        )
+        assert note in COVER_LETTER_PROMPT
+        assert note in OUTREACH_MESSAGE_PROMPT
+        assert "never European Portuguese" in DIFF_IMPROVE_PROMPT
+        for prompt in IMPROVE_RESUME_PROMPTS.values():
+            assert note in prompt
+
+    def test_the_prompts_still_format_after_the_note(self):
+        from app.prompts.templates import IMPROVE_RESUME_PROMPTS
+
+        for prompt in IMPROVE_RESUME_PROMPTS.values():
+            rendered = prompt.format(
+                critical_truthfulness_rules="rules",
+                domain_pack_section="",
+                output_language="Brazilian Portuguese",
+                job_description="job",
+                job_keywords="keywords",
+                original_resume="resume",
+                schema="schema",
+            )
+            assert "Brazilian Portuguese" in rendered
+
+
 class TestAntiFabricationClausesPresent:
     def test_diff_prompt_keeps_no_invented_work_clauses(self):
         # rule 11's reframe permission must ship WITH its anti-fabrication clause
