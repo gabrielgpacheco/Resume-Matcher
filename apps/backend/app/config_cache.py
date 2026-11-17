@@ -59,3 +59,17 @@ def get_content_language() -> str:
     """Get configured content language from cached config."""
     config = load_config()
     return config.get("content_language", config.get("language", "en"))
+
+
+def explicit_content_language() -> str | None:
+    """The content language only when the user actually chose one.
+
+    Used by Edit Mode's language detection: the built-in ``"en"`` fallback is
+    not a choice, so it must not override the resume's own language.
+    """
+    config = load_config()
+    for key in ("content_language", "language"):
+        value = config.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None

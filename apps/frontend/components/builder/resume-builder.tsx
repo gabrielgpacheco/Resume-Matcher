@@ -230,7 +230,7 @@ interface ResumeBuilderProps {
 
 const ResumeBuilderContent = ({ agentMode = false }: ResumeBuilderProps) => {
   const { t } = useTranslations();
-  const { uiLanguage, contentLanguage } = useLanguage();
+  const { uiLanguage } = useLanguage();
   const [notificationDialog, setNotificationDialog] = useState<{
     title: string;
     description: string;
@@ -383,7 +383,6 @@ const ResumeBuilderContent = ({ agentMode = false }: ResumeBuilderProps) => {
   // AI Regenerate wizard
   const regenerateWizard = useRegenerateWizard({
     resumeId: resumeId || '',
-    outputLanguage: contentLanguage,
     onSuccess: async () => {
       // Reload resume data after applying changes
       if (!resumeId) {
