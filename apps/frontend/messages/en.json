@@ -968,6 +968,25 @@
       "error": "Could not apply the keywords. Please try again.",
       "scoreChange": "ATS score {before} → {after}",
       "limitReached": "You can add up to {max} keywords to one resume."
+    },
+    "gapInterview": {
+      "open": "Answer gap questions",
+      "title": "Gap interview",
+      "description": "Answer a few questions about the skills this job asks for. Only what you confirm can go into the resume.",
+      "loading": "Preparing the questions",
+      "empty": "Nothing to ask: every job keyword appears in your master resume.",
+      "loadError": "Could not load the questions. Please try again.",
+      "saveError": "Could not save your answers. Please try again.",
+      "haveIt": "I have used this",
+      "doNotHaveIt": "I don't have this experience",
+      "save": "Save answers",
+      "saving": "Saving answers",
+      "confirmed": "Confirmed: {keywords}. They are applied when you press Apply.",
+      "noneConfirmed": "No keyword confirmed. Nothing was added to the resume.",
+      "studyTitle": "Worth studying",
+      "studyRecommendation": "Consider studying {keyword} to strengthen your application.",
+      "apply": "Apply confirmed keywords",
+      "close": "Close"
     }
   },
   "settings": {

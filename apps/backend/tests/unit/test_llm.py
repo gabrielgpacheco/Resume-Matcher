@@ -528,6 +528,16 @@ class TestAppearsTruncated:
         data = {"required_skills": [], "preferred_skills": [], "keywords": []}
         assert _appears_truncated(data, schema_type="keywords") is False
 
+    # --- gap interview schema ---
+
+    def test_gap_interview_missing_questions_key(self) -> None:
+        """A missing questions list means the response was cut short."""
+        assert _appears_truncated({}, schema_type="gap_interview") is True
+
+    def test_gap_interview_empty_questions_is_valid(self) -> None:
+        """No gaps to ask about is a valid, complete answer."""
+        assert _appears_truncated({"questions": []}, schema_type="gap_interview") is False
+
     # --- default / unknown schema ---
 
     def test_default_schema_acts_like_resume(self) -> None:

@@ -117,6 +117,7 @@ Models served over `/chat/completions` on that gateway (e.g. `glm-5.3-flash`, `g
 | 2026-11-16 | tooling | Added `setup.ps1`, `start.ps1`, `sync-upstream.ps1`. |
 | 2026-11-16 | security | Ignore uploaded resume PDFs/DOCX in `.gitignore` (personal data is never committed). |
 | 2026-11-16 | feature | Import a job description from a URL (JSON-LD `JobPosting` + HTML fallback) on the tailor page. |
+| 2026-11-17 | feature | Gap interview: the tailor page asks about job keywords your master resume does not show and only applies what you confirm; a "no" answer becomes a study suggestion. Answers are remembered per job. |
 
 ## Sponsors
 

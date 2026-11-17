@@ -968,6 +968,25 @@
       "error": "No se pudieron aplicar las palabras clave. Inténtalo de nuevo.",
       "scoreChange": "Puntuación ATS {before} → {after}",
       "limitReached": "Puedes añadir hasta {max} palabras clave a un currículum."
+    },
+    "gapInterview": {
+      "open": "Responder preguntas sobre brechas",
+      "title": "Entrevista de brechas",
+      "description": "Responde algunas preguntas sobre las habilidades que pide la oferta. Solo lo que confirmes puede entrar en el currículum.",
+      "loading": "Preparando las preguntas",
+      "empty": "Nada que preguntar: todas las palabras clave de la oferta aparecen en tu currículum principal.",
+      "loadError": "No se pudieron cargar las preguntas. Inténtalo de nuevo.",
+      "saveError": "No se pudieron guardar tus respuestas. Inténtalo de nuevo.",
+      "haveIt": "Sí, lo he usado",
+      "doNotHaveIt": "No tengo esa experiencia",
+      "save": "Guardar respuestas",
+      "saving": "Guardando respuestas",
+      "confirmed": "Confirmadas: {keywords}. Se aplican al pulsar Aplicar.",
+      "noneConfirmed": "Ninguna palabra clave confirmada. No se añadió nada al currículum.",
+      "studyTitle": "Vale la pena estudiar",
+      "studyRecommendation": "Considera estudiar {keyword} para reforzar tu candidatura.",
+      "apply": "Aplicar palabras clave confirmadas",
+      "close": "Cerrar"
     }
   },
   "settings": {

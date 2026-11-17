@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { GapInterviewDialog } from '@/components/tailor/gap-interview-dialog';
 import type { ForcedKeywordInput } from '@/lib/api/resume';
 import { useTranslations } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -21,6 +22,9 @@ interface KeywordForcingPanelProps {
   error?: string | null;
   /** How many more keywords this preview may take (the server keeps at most 30). */
   remaining?: number;
+  /** Source resume and job: enable the gap interview when both are known. */
+  resumeId?: string;
+  jobId?: string;
 }
 
 function Chip({
@@ -70,12 +74,20 @@ export function KeywordForcingPanel({
   busy = false,
   error,
   remaining = MAX_FORCED_KEYWORDS,
+  resumeId,
+  jobId,
 }: KeywordForcingPanelProps) {
   const { t } = useTranslations();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [addToMaster, setAddToMaster] = useState(true);
+  const [interviewOpen, setInterviewOpen] = useState(false);
+  // Keywords the interview answered "no" to: hidden until the preview changes.
+  const [declined, setDeclined] = useState<Set<string>>(new Set());
 
-  if (unsupported.length === 0 && supported.length === 0) return null;
+  const unsupportedList = unsupported.filter((keyword) => !declined.has(keyword));
+
+  // Keep the panel mounted while the interview result is showing.
+  if (unsupportedList.length === 0 && supported.length === 0 && !interviewOpen) return null;
 
   const toggle = (keyword: string) =>
     setSelected((current) => {
@@ -88,6 +100,7 @@ export function KeywordForcingPanel({
   const unsupportedSet = new Set(unsupported);
   const full = selected.size >= remaining;
   const anyAttested = [...selected].some((k) => unsupportedSet.has(k));
+  const canInterview = Boolean(resumeId && jobId) && unsupportedList.length > 0;
 
   const apply = () => {
     const keywords = [...selected].map((keyword) => ({
@@ -111,6 +124,17 @@ export function KeywordForcingPanel({
           {t('tailor.forceKeywords.title')}
         </h3>
         <p className="mt-1 text-sm text-ink-soft">{t('tailor.forceKeywords.description')}</p>
+        {canInterview && resumeId && jobId && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={() => setInterviewOpen(true)}
+            disabled={busy}
+          >
+            {t('tailor.gapInterview.open')}
+          </Button>
+        )}
       </div>
 
       {supported.length > 0 && (
@@ -133,13 +157,13 @@ export function KeywordForcingPanel({
         </div>
       )}
 
-      {unsupported.length > 0 && (
+      {unsupportedList.length > 0 && (
         <div>
           <p className="mb-2 font-mono text-xs font-bold uppercase tracking-wider text-ink-soft">
             {t('tailor.forceKeywords.unsupported')}
           </p>
           <ul className="flex flex-wrap gap-2">
-            {unsupported.map((keyword) => (
+            {unsupportedList.map((keyword) => (
               <Chip
                 key={keyword}
                 keyword={keyword}
@@ -185,6 +209,18 @@ export function KeywordForcingPanel({
           t('tailor.forceKeywords.applyButton', { count: selected.size })
         )}
       </Button>
+
+      {resumeId && jobId && (
+        <GapInterviewDialog
+          open={interviewOpen}
+          onOpenChange={setInterviewOpen}
+          resumeId={resumeId}
+          jobId={jobId}
+          busy={busy}
+          onApplyConfirmed={(keywords) => onApply(keywords, true)}
+          onDeclined={(keywords) => setDeclined((current) => new Set([...current, ...keywords]))}
+        />
+      )}
     </section>
   );
 }

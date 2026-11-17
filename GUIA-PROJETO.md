@@ -285,20 +285,33 @@ entra no currículo se o usuário declarar que a possui. A melhoria adiciona a e
 
 **Fluxo:**
 1. Calcular lacunas: `analyze_keyword_gaps()` / `calculate_keyword_match()` em `services/refiner.py`.
+   A entrevista usa `missing_keywords()` (mesma regra de `keyword_in_text`, mas em ordem da vaga
+   e determinística).
 2. `POST /api/v1/resumes/{resume_id}/gap-interview` (body: `job_id`) →
-   gera 3 a 8 perguntas via `complete_json` com schema: `[{ "keyword", "question", "context" }]`.
-   Uma pergunta por lacuna relevante, curta, em pt-BR, nunca sugerindo a resposta.
-3. UI: tela de perguntas com "não tenho essa experiência" como opção explícita.
-4. `POST /api/v1/resumes/{resume_id}/gap-answers` (body: respostas) →
-   `force_keywords(..., attested=[...])` grava no currículo mestre do usuário
-   (skills + no máximo 2 linhas onde a evidência couber, como já faz hoje).
-5. Persistir as respostas junto ao currículo mestre para não perguntar de novo.
+   gera até 8 perguntas via `complete_json` (`schema_type="gap_interview"`) com schema:
+   `[{ "keyword", "question", "context" }]`. Uma pergunta por lacuna relevante, curta, no idioma
+   de conteúdo (`get_content_language()`), nunca sugerindo a resposta.
+3. UI: `components/tailor/gap-interview-dialog.tsx`, aberto pelo painel de keywords. Cada pergunta
+   tem "já usei" e "não tenho essa experiência" como opções explícitas; salvar exige resposta
+   para todas.
+4. `POST /api/v1/resumes/{resume_id}/gap-answers` (body: respostas) registra as respostas e devolve
+   `attested` (as keywords confirmadas). O frontend então chama o fluxo existente de
+   `apply-keywords` com `attested: true`, que coloca a keyword em skills e em até 2 linhas.
+   Decisão: a entrevista **não** reescreve o currículo mestre sozinha — o mestre só recebe skills
+   confirmadas no "confirm" do preview, como já acontece hoje (menos surpresa e sem preview obsoleto).
+5. Persistir as respostas em `jobs.metadata_json` (`gap_answers`, por `resume_id`) para não
+   perguntar de novo.
 
 **Regra dura:** nenhuma keyword entra sem resposta afirmativa do usuário. Resposta "não tenho"
-gera uma recomendação de estudo, nunca conteúdo no currículo.
+gera uma recomendação de estudo (texto i18n no frontend), nunca conteúdo no currículo.
 
 **Aceite:** vaga com requisito ausente gera pergunta; "não tenho" não altera o currículo;
 "tenho" adiciona a keyword em skills e em até 2 linhas, sem inventar métrica ou empregador.
+
+**Implementada:** `services/gap_interview.py`, `prompts/gap_interview.py`, schemas em
+`schemas/writing.py`, dois endpoints em `routers/resumes.py`, `truncation` própria em `llm.py`,
+dialog e integração no painel de keywords, 17 chaves i18n nos 7 locales, testes unitários e de
+integração.
 
 ### 6.3 `feat/docx-export` — exportar DOCX
 
@@ -510,8 +523,8 @@ Considere a entrega concluída quando:
 - [ ] Provedor Go responde a uma chamada real de teste
 - [ ] Correção de 4096 tokens aplicada e validada com currículo longo
 - [ ] Ciclo completo validado: upload → vaga → tailoring → revisão → PDF
-- [ ] `feat/job-url` concluída
-- [ ] `feat/gap-interview` concluída
+- [x] `feat/job-url` concluída
+- [x] `feat/gap-interview` concluída
 - [ ] `feat/docx-export` concluída
 - [ ] `feat/wp-prompt-pack` concluída
 - [ ] `feat/pt-br-review` concluída

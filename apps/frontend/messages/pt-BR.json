@@ -968,6 +968,25 @@
       "error": "Não foi possível aplicar as palavras-chave. Tente novamente.",
       "scoreChange": "Pontuação ATS {before} → {after}",
       "limitReached": "Você pode adicionar até {max} palavras-chave a um currículo."
+    },
+    "gapInterview": {
+      "open": "Responder perguntas sobre lacunas",
+      "title": "Entrevista de lacunas",
+      "description": "Responda algumas perguntas sobre as habilidades que a vaga pede. Só o que você confirmar entra no currículo.",
+      "loading": "Preparando as perguntas",
+      "empty": "Nada a perguntar: todas as palavras-chave da vaga aparecem no seu currículo principal.",
+      "loadError": "Não foi possível carregar as perguntas. Tente novamente.",
+      "saveError": "Não foi possível salvar as respostas. Tente novamente.",
+      "haveIt": "Já usei",
+      "doNotHaveIt": "Não tenho essa experiência",
+      "save": "Salvar respostas",
+      "saving": "Salvando respostas",
+      "confirmed": "Confirmadas: {keywords}. Elas entram no currículo quando você aplicar.",
+      "noneConfirmed": "Nenhuma palavra-chave confirmada. Nada foi adicionado ao currículo.",
+      "studyTitle": "Vale estudar",
+      "studyRecommendation": "Considere estudar {keyword} para fortalecer sua candidatura.",
+      "apply": "Aplicar palavras-chave confirmadas",
+      "close": "Fechar"
     }
   },
   "settings": {

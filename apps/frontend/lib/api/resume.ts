@@ -323,13 +323,64 @@ export async function applyKeywords(payload: {
   );
 }
 
+/** One question from the gap interview; `context` says why the keyword matters. */
+export interface GapQuestion {
+  keyword: string;
+  question: string;
+  context: string;
+}
+
+/** A recorded gap-interview answer; `detail` is free text (optional). */
+export interface GapAnswerInput {
+  keyword: string;
+  have_it: boolean;
+  detail?: string;
+}
+
+export interface GapAnswersResult {
+  results: { keyword: string; have_it: boolean }[];
+  /** Keywords the user confirmed, safe to attest when applying them. */
+  attested: string[];
+}
+
+/** Asks about the job keywords the master resume does not show. */
+export async function fetchGapQuestions(resumeId: string, jobId: string): Promise<GapQuestion[]> {
+  const res = await apiPost(`/resumes/${encodeURIComponent(resumeId)}/gap-interview`, {
+    job_id: jobId,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    const detail = parseErrorDetail(text);
+    throw new Error(detail ?? `Gap interview failed (status ${res.status})`);
+  }
+  const data = (await res.json()) as { questions: GapQuestion[] };
+  return data.questions;
+}
+
+/** Records the answers so the same questions are not asked again. */
+export async function submitGapAnswers(
+  resumeId: string,
+  jobId: string,
+  answers: GapAnswerInput[]
+): Promise<GapAnswersResult> {
+  const res = await apiPost(`/resumes/${encodeURIComponent(resumeId)}/gap-answers`, {
+    job_id: jobId,
+    answers,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    const detail = parseErrorDetail(text);
+    throw new Error(detail ?? `Saving the answers failed (status ${res.status})`);
+  }
+  return (await res.json()) as GapAnswersResult;
+}
+
 /** Confirms and saves a tailored resume */
 export async function confirmImproveResume(
   payload: ImproveResumeConfirmRequest
 ): Promise<ImprovedResult> {
   return postImprove('/resumes/improve/confirm', payload as unknown as Record<string, unknown>);
 }
-
 /** Fetches a raw resume record for previewing the original upload */
 export async function fetchResume(resumeId: string): Promise<ResumeResponse['data']> {
   const res = await apiFetch(`/resumes?resume_id=${encodeURIComponent(resumeId)}`);

@@ -968,6 +968,25 @@
       "error": "Impossible d'appliquer les mots-clés. Veuillez réessayer.",
       "scoreChange": "Score ATS {before} → {after}",
       "limitReached": "Vous pouvez ajouter jusqu'à {max} mots-clés à un CV."
+    },
+    "gapInterview": {
+      "open": "Répondre aux questions sur les lacunes",
+      "title": "Entretien sur les lacunes",
+      "description": "Répondez à quelques questions sur les compétences demandées par l'offre. Seul ce que vous confirmez peut entrer dans le CV.",
+      "loading": "Préparation des questions",
+      "empty": "Rien à demander : tous les mots-clés de l'offre figurent dans votre CV principal.",
+      "loadError": "Impossible de charger les questions. Réessayez.",
+      "saveError": "Impossible d'enregistrer vos réponses. Réessayez.",
+      "haveIt": "Je l'ai déjà utilisé",
+      "doNotHaveIt": "Je n'ai pas cette expérience",
+      "save": "Enregistrer les réponses",
+      "saving": "Enregistrement des réponses",
+      "confirmed": "Confirmés : {keywords}. Ils sont appliqués quand vous cliquez sur Appliquer.",
+      "noneConfirmed": "Aucun mot-clé confirmé. Rien n'a été ajouté au CV.",
+      "studyTitle": "À étudier",
+      "studyRecommendation": "Envisagez d'étudier {keyword} pour renforcer votre candidature.",
+      "apply": "Appliquer les mots-clés confirmés",
+      "close": "Fermer"
     }
   },
   "settings": {

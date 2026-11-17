@@ -117,6 +117,7 @@ Modelos servidos via `/chat/completions` nesse gateway (ex.: `glm-5.3-flash`, `g
 | 2026-11-16 | ferramenta | Adicionados `setup.ps1`, `start.ps1`, `sync-upstream.ps1`. |
 | 2026-11-16 | segurança | PDFs/DOCX de currículo enviados ignorados no `.gitignore` (dados pessoais nunca são commitados). |
 | 2026-11-16 | funcionalidade | Importar a descrição da vaga a partir de uma URL (JSON-LD `JobPosting` + fallback HTML) na tela de personalização. |
+| 2026-11-17 | funcionalidade | Entrevista de lacunas: a tela de personalização pergunta sobre as palavras-chave da vaga que o currículo principal não mostra e aplica só o que você confirmar; a resposta "não" vira sugestão de estudo. As respostas ficam guardadas por vaga. |
 
 <a id="sponsors"></a>
 

@@ -968,6 +968,25 @@
       "error": "无法应用关键词，请重试。",
       "scoreChange": "ATS 分数 {before} → {after}",
       "limitReached": "每份简历最多可添加 {max} 个关键词。"
+    },
+    "gapInterview": {
+      "open": "回答差距问题",
+      "title": "差距访谈",
+      "description": "回答几个关于该职位所需技能的问题。只有你确认的内容才会进入简历。",
+      "loading": "正在准备问题",
+      "empty": "没有问题：该职位的所有关键词都已出现在你的主简历中。",
+      "loadError": "无法加载问题，请重试。",
+      "saveError": "无法保存你的回答，请重试。",
+      "haveIt": "我用过",
+      "doNotHaveIt": "我没有这方面的经验",
+      "save": "保存回答",
+      "saving": "正在保存回答",
+      "confirmed": "已确认：{keywords}。点击应用后写入简历。",
+      "noneConfirmed": "没有确认任何关键词。简历未做任何更改。",
+      "studyTitle": "值得学习",
+      "studyRecommendation": "考虑学习 {keyword} 以增强你的申请。",
+      "apply": "应用已确认的关键词",
+      "close": "关闭"
     }
   },
   "settings": {

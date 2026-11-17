@@ -1588,9 +1588,9 @@ def _appears_truncated(data: dict, schema_type: str = "resume") -> bool:
 
     Args:
         data: Parsed JSON dict.
-        schema_type: Expected schema — "resume" (full resume), "enrichment"
-            (analyze output), "diff" (diff changes), "keywords", or
-            "interview_prep".
+        schema_type: Expected schema - "resume" (full resume), "enrichment"
+            (analyze output), "diff" (diff changes), "keywords",
+            "interview_prep", or "gap_interview".
             Determines which fields are checked for truncation.
     """
     if not isinstance(data, dict):
@@ -1626,6 +1626,15 @@ def _appears_truncated(data: dict, schema_type: str = "resume") -> bool:
             logging.warning(
                 "Possible truncation detected: interview_prep missing required keys: %s",
                 ", ".join(sorted(missing)),
+            )
+            return True
+        return False
+
+    if schema_type == "gap_interview":
+        # An empty list is valid (no gaps to ask about); only the key must exist.
+        if not isinstance(data.get("questions"), list):
+            logging.warning(
+                "Possible truncation detected: gap_interview missing 'questions' list"
             )
             return True
         return False
@@ -1956,9 +1965,10 @@ async def complete_json(
     are handled by the Router and are NOT retried again here.
 
     Args:
-        schema_type: Expected schema — "resume", "enrichment", "diff",
-            "keywords", or "interview_prep". Passed to _appears_truncated for
-            context-aware truncation detection and used to tailor retry hints.
+        schema_type: Expected schema - "resume", "enrichment", "diff",
+            "keywords", "interview_prep", or "gap_interview". Passed to
+            _appears_truncated for context-aware truncation detection and used
+            to tailor retry hints.
         response_validator: Optional synchronous schema/source validator. A
             ``ValueError`` rejects the content inside this retry budget.
     """
@@ -2080,6 +2090,8 @@ async def complete_json(
                         hint = "\n\nIMPORTANT: Output the COMPLETE JSON object with ALL keys: items_to_enrich, questions, analysis_summary. Do not truncate."
                     elif schema_type == "interview_prep":
                         hint = "\n\nIMPORTANT: Output the COMPLETE JSON object with ALL keys: role_fit_analysis, resume_questions, project_follow_ups, skill_gaps, talking_points. Do not truncate."
+                    elif schema_type == "gap_interview":
+                        hint = "\n\nIMPORTANT: Output the COMPLETE JSON object with the 'questions' array. Do not truncate."
                     else:
                         hint = "\n\nIMPORTANT: Output ONLY a valid JSON object. Start with { and end with }."
                     messages[-1]["content"] = prompt + hint

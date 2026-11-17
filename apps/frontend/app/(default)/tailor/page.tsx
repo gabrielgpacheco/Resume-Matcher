@@ -81,6 +81,8 @@ export default function TailorPage() {
   const [masters, setMasters] = useState<ResumeListItem[]>([]);
   // The master a preview was built from; confirm must send this, not the picker's current value.
   const previewSourceIdRef = useRef<string | null>(null);
+  // State twin of the ref, so render can pass the source to the keyword panel.
+  const [previewSourceId, setPreviewSourceId] = useState<string | null>(null);
   const [promptOptions, setPromptOptions] = useState<PromptOption[]>([]);
   const [selectedPromptId, setSelectedPromptId] = useState('keywords');
   const [promptLoading, setPromptLoading] = useState(false);
@@ -349,6 +351,7 @@ export default function TailorPage() {
       // 1. Upload Job Description
       // The API expects an array of strings
       previewSourceIdRef.current = resumeId;
+      setPreviewSourceId(resumeId);
       const jobId = await uploadJobDescriptions([description], resumeId);
       if (!isCurrent(token)) return;
       incrementJobs(); // Update cached counter
@@ -907,6 +910,8 @@ export default function TailorPage() {
                 busy={keywordBusy}
                 error={keywordError}
                 remaining={Math.max(0, MAX_FORCED_KEYWORDS - forcedKeywords.length)}
+                resumeId={previewSourceId ?? masterResumeId ?? undefined}
+                jobId={pendingResult?.data?.job_id}
               />
             ) : null
           }

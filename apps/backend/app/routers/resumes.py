@@ -74,7 +74,15 @@ from app.schemas import (
 )
 from app.schemas.models import ResumeTemplate
 from app.schemas.refinement import RefinementConfig
-from app.schemas.writing import ApplyKeywordsRequest
+from app.schemas.writing import (
+    ApplyKeywordsRequest,
+    GapAnswerResult,
+    GapAnswersRequest,
+    GapAnswersResponse,
+    GapInterviewRequest,
+    GapInterviewResponse,
+    GapQuestion,
+)
 from app.schemas.writing_report import WritingReport
 from app.services.ats import compute_ats_score
 from app.services.bullet_selector import SELECTABLE_SECTIONS
@@ -82,6 +90,13 @@ from app.services.cover_letter import (
     generate_cover_letter,
     generate_outreach_message,
     generate_resume_title,
+)
+from app.services.gap_interview import (
+    MAX_QUESTIONS,
+    answered_keywords,
+    generate_gap_questions,
+    merge_answers,
+    missing_keywords,
 )
 from app.services.improver import (
     MONTH_PATTERN,
@@ -1862,6 +1877,100 @@ async def apply_keywords_endpoint(
             forced_keywords=[p.keyword for p in placements if p.paths],
             warnings=response_warnings,
         ),
+    )
+
+
+@router.post("/{resume_id}/gap-interview", response_model=GapInterviewResponse)
+async def gap_interview_endpoint(
+    resume_id: str, request: GapInterviewRequest
+) -> GapInterviewResponse:
+    """Ask about job keywords the master resume does not show.
+
+    One neutral question per missing keyword, in the content language. Keywords
+    the user already answered for this job are not asked again.
+    """
+    resume = await db.get_resume(resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    job = await db.get_job(request.job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job description not found")
+    _validate_ai_sources(resume, job)
+
+    job_keywords = _scorable_job_keywords(job)
+    if not job_keywords:
+        raise HTTPException(
+            status_code=409,
+            detail="This job has no keywords. Please generate a new preview.",
+        )
+    master = await _grounding_master_data(resume) or _get_original_resume_data(resume)
+    if master is None:
+        raise HTTPException(status_code=400, detail="Resume has no structured data.")
+
+    answered = answered_keywords(job, resume_id)
+    gaps = [
+        term
+        for term in missing_keywords(job_keywords, master)
+        if term.casefold() not in answered
+    ][:MAX_QUESTIONS]
+    if not gaps:
+        return GapInterviewResponse(questions=[])
+
+    try:
+        questions = await asyncio.wait_for(
+            generate_gap_questions(master, gaps, get_content_language()),
+            timeout=remaining_timeout(),
+        )
+    except asyncio.TimeoutError as e:
+        raise HTTPException(
+            status_code=504,
+            detail="The gap interview timed out. Please try again.",
+        ) from e
+    return GapInterviewResponse(
+        questions=[GapQuestion.model_validate(question) for question in questions]
+    )
+
+
+@router.post("/{resume_id}/gap-answers", response_model=GapAnswersResponse)
+async def gap_answers_endpoint(
+    resume_id: str, request: GapAnswersRequest
+) -> GapAnswersResponse:
+    """Record the interview answers so the question is not asked again."""
+    resume = await db.get_resume(resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    job = await db.get_job(request.job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job description not found")
+    job_keywords = _scorable_job_keywords(job)
+    if not job_keywords:
+        raise HTTPException(
+            status_code=409,
+            detail="This job has no keywords. Please generate a new preview.",
+        )
+
+    terms = {term.casefold(): term for term in job_keyword_terms(job_keywords)}
+    answers: list[dict[str, Any]] = []
+    for item in request.answers:
+        term = terms.get(item.keyword.strip().casefold())
+        if term is None:
+            raise HTTPException(
+                status_code=400, detail="Only keywords from this job can be answered."
+            )
+        answers.append(
+            {"keyword": term, "have_it": item.have_it, "detail": item.detail}
+        )
+
+    updated = await db.update_job(job["job_id"], merge_answers(job, resume_id, answers))
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Job description not found")
+
+    return GapAnswersResponse(
+        results=[
+            GapAnswerResult(keyword=answer["keyword"], have_it=answer["have_it"])
+            for answer in answers
+        ],
+        attested=[answer["keyword"] for answer in answers if answer["have_it"]],
     )
 
 
