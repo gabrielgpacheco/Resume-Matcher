@@ -37,7 +37,8 @@ melhoria de "entrevista de lacunas".
 | Modo "agent" (MCP) | Documentado como plano B, não é o fluxo principal | Mantém o fluxo pela interface web |
 
 **Melhorias priorizadas** (todas aprovadas): leitura da vaga por URL, entrevista de lacunas,
-exportação DOCX, prompt pack WordPress/PHP, revisão pt-BR.
+exportação DOCX, prompt pack WordPress/PHP, revisão pt-BR, e Edit Mode com sugestões no idioma
+do currículo (pt-BR).
 
 ---
 
@@ -347,6 +348,41 @@ correta e nenhum caractere é perdido.
 **Aceite:** interface sem termos de pt-PT ("ficheiro", "ecrã", "utilizador") e sem strings
 não traduzidas; PDF e DOCX com datas no formato brasileiro.
 
+### 6.6 `feat/edit-mode-pt-br` — Edit Mode detecta o idioma do currículo e sugere em pt-BR
+
+**Objetivo:** no **Resume Builder (Modo Edição)**, as sugestões de texto geradas por IA
+(enriquecimento, reescrita de bullets, regeneração) saem no idioma principal do currículo
+carregado. Currículo em pt-BR → sugestões em pt-BR; currículo em inglês → sugestões em inglês.
+
+**Contexto (já existe):** o backend já tem a infra de idioma pronta — `LANGUAGE_NAMES` e
+`get_language_name()` em `prompts/templates.py`, e `output_language` em todos os serviços de
+sugestão (`routers/enrichment.py`, `services/writing_loop.py`, `keyword_forcing.py`,
+`improver.py`, `cover_letter.py`, `interview_prep.py`, `resume_wizard.py`). O schema de
+enriquecimento usa `output_language: str = "en"` como padrão.
+
+**Onde mexer:**
+- Detecção de idioma (novo): `services/language_detection.py`. Como não há lib de detecção
+  instalada, usar heurística sobre o texto real do currículo (summary + bullets): caracteres
+  acentuados específicos do português (`ç`, `ã`, `õ`, `á/é/í/ó/ú`) + stopwords pt-BR
+  ("desenvolvimento", "e", "com", "para", "em", "que", "não") vs. padrões de inglês. Evitar
+  confundir com o campo `additional.languages` (idiomas falados do candidato), que não é o
+  idioma do conteúdo.
+- Backend: `routers/enrichment.py` e `services/writing_loop.py` passam a usar o idioma
+  detectado como **fallback** quando `output_language` não foi definido explicitamente
+  (ex.: usuário não configurou em Settings ou não enviou o parâmetro).
+- Frontend: o modal de enriquecimento (`components/enrichment/`), o painel de escrita
+  (`components/builder/writing-panel.tsx`) e o wizard de regeneração (`components/builder/regenerate-*`)
+  enviam o idioma detectado (ou deixam o backend detectar).
+- "Modo Edição" é o `t('builder.editMode')` usado em `components/builder/resume-builder.tsx`
+  (~linha 1725) quando há um `resumeId`.
+
+**Regra:** a configuração explícita de idioma (Settings / `LanguageConfig`) continua
+prevalecendo sobre a detecção automática; a detecção só entra quando não há escolha explícita.
+
+**Aceite:** carregar o CV em pt-BR e usar as sugestões de IA do Edit Mode gera texto em
+pt-BR; carregar o CV em inglês gera em inglês; escolha explícita de idioma em Settings segue
+respeitada; o teste de "fact violations" continua limpo.
+
 ---
 
 ## 7. Mapa do código (o que importa)
@@ -393,7 +429,7 @@ em inglês, seguindo o padrão do upstream.
 ## 8. Convenções
 
 - **Branch por melhoria:** `feat/job-url`, `feat/gap-interview`, `feat/docx-export`,
-  `feat/wp-prompt-pack`, `feat/pt-br-review`. Correções de base em `fix/llm-token-budget`.
+  `feat/wp-prompt-pack`, `feat/pt-br-review`, `feat/edit-mode-pt-br`. Correções de base em `fix/llm-token-budget`.
 - **Commit:** mensagem em inglês, imperativo, curta; corpo explicando o "por quê" quando não
   for óbvio.
 - **Antes de commitar:** rodar os testes e o lint (seção 9).
@@ -479,6 +515,7 @@ Considere a entrega concluída quando:
 - [ ] `feat/docx-export` concluída
 - [ ] `feat/wp-prompt-pack` concluída
 - [ ] `feat/pt-br-review` concluída
+- [ ] `feat/edit-mode-pt-br` concluída
 - [ ] `start.ps1`, `sync-upstream.ps1` e `setup.ps1` funcionando
 - [ ] README do fork com instruções próprias e atribuição ao projeto original
 
