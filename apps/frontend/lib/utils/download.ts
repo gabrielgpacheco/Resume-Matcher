@@ -33,11 +33,13 @@ export function openUrlInNewTab(url: string): boolean {
 export function sanitizeFilename(
   title: string | null | undefined,
   fallbackId: string,
-  type: 'resume' | 'cover-letter' = 'resume'
+  type: 'resume' | 'cover-letter' = 'resume',
+  extension: 'pdf' | 'docx' = 'pdf'
 ): string {
   // Use fallback if no title
   if (!title?.trim()) {
-    return type === 'resume' ? `resume_${fallbackId}.pdf` : `cover_letter_${fallbackId}.pdf`;
+    const stem = type === 'resume' ? 'resume' : 'cover_letter';
+    return `${stem}_${fallbackId}.${extension}`;
   }
 
   // Normalize Unicode to NFC form to ensure consistent representation
@@ -58,18 +60,19 @@ export function sanitizeFilename(
   }
 
   // Add .pdf extension
-  return `${sanitized}.pdf`;
+  return `${sanitized}.${extension}`;
 }
 
 /**
- * Build a personalized download filename for resume or cover letter PDFs.
- * Format: "{Name} - {Type} - {Company}.pdf" (falls back gracefully when data is missing)
+ * Build a personalized download filename for resume or cover letter files.
+ * Format: "{Name} - {Type} - {Company}.{ext}" (falls back gracefully when data is missing)
  */
 export function buildResumeFilename(
   name: string | null | undefined,
   company: string | null | undefined,
   fallbackId: string,
-  type: 'resume' | 'cover-letter' = 'resume'
+  type: 'resume' | 'cover-letter' = 'resume',
+  extension: 'pdf' | 'docx' = 'pdf'
 ): string {
   const typeLabel = type === 'resume' ? 'Resume' : 'Cover Letter';
   const cleanName = name?.trim() || null;
@@ -84,9 +87,10 @@ export function buildResumeFilename(
     return sanitizeFilename(
       cleanCompany ? `${typeLabel} - ${cleanCompany}` : null,
       fallbackId,
-      type
+      type,
+      extension
     );
   }
 
-  return sanitizeFilename(raw, fallbackId, type);
+  return sanitizeFilename(raw, fallbackId, type, extension);
 }

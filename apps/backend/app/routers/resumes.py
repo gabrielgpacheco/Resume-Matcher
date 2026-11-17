@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 import logging
+import re
 import unicodedata
 from collections.abc import Awaitable
 from datetime import datetime, timezone
@@ -90,6 +91,11 @@ from app.services.cover_letter import (
     generate_cover_letter,
     generate_outreach_message,
     generate_resume_title,
+)
+from app.services.docx_export import (
+    DOCX_MEDIA_TYPE,
+    build_resume_docx,
+    has_renderable_content,
 )
 from app.services.gap_interview import (
     MAX_QUESTIONS,
@@ -849,6 +855,10 @@ LEGACY_DOC_DETAIL = (
 UNPARSED_RESUME_PDF_DETAIL = (
     "This resume has not been processed yet, so there is nothing to put in a PDF. "
     "Retry processing it from the dashboard, then download again."
+)
+UNPARSED_RESUME_DOCX_DETAIL = (
+    "This resume has not been processed yet, so there is nothing to put in a Word "
+    "document. Retry processing it from the dashboard, then download again."
 )
 PASSWORD_PDF_DETAIL = (
     "This PDF is password-protected. Remove the password (or print it to a new "
@@ -2632,6 +2642,39 @@ async def download_resume_pdf(
 
     headers = {"Content-Disposition": f'attachment; filename="resume_{resume_id}.pdf"'}
     return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
+
+
+@router.get("/{resume_id}/docx")
+async def download_resume_docx(resume_id: str) -> Response:
+    """Generate an ATS-friendly Word document for a resume.
+
+    The document is built from the stored structured data: one column, real
+    headings, no tables or text boxes, and the same section order/visibility and
+    bullet styles the viewer shows.
+    """
+    resume = await db.get_resume(resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    if not _has_renderable_resume_data(resume):
+        raise HTTPException(status_code=409, detail=UNPARSED_RESUME_DOCX_DETAIL)
+
+    raw_data = _get_original_resume_data(resume)
+    try:
+        resume_data = ResumeData.model_validate(raw_data)
+    except ValidationError as e:
+        logger.warning(
+            "Resume %s has invalid structured data for DOCX: %s", resume_id, e
+        )
+        raise HTTPException(status_code=409, detail=UNPARSED_RESUME_DOCX_DETAIL)
+    if not has_renderable_content(resume_data):
+        raise HTTPException(status_code=409, detail=UNPARSED_RESUME_DOCX_DETAIL)
+
+    docx_bytes = build_resume_docx(resume_data)
+    # The id comes from the URL; keep it out of the header when it holds anything
+    # but filename-safe characters.
+    safe_id = re.sub(r"[^A-Za-z0-9._-]", "_", resume_id)[:80] or "resume"
+    headers = {"Content-Disposition": f'attachment; filename="resume_{safe_id}.docx"'}
+    return Response(content=docx_bytes, media_type=DOCX_MEDIA_TYPE, headers=headers)
 
 
 @router.delete("/{resume_id}")

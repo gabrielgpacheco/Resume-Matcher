@@ -16,7 +16,9 @@ import { PaginatedPreview } from '@/components/preview';
 import {
   fetchResume,
   downloadResumePdf,
+  downloadResumeDocx,
   getResumePdfUrl,
+  getResumeDocxUrl,
   deleteResume,
   retryProcessing,
   renameResume,
@@ -27,6 +29,7 @@ import { useStatusCache } from '@/lib/context/status-cache';
 import {
   NotePencil,
   DownloadSimple,
+  FileDoc,
   SpinnerGap,
   PencilSimple,
   Chats,
@@ -81,6 +84,7 @@ export default function ResumeViewerPage() {
   const [showEnrichmentModal, setShowEnrichmentModal] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
   const [resumeTitle, setResumeTitle] = useState<string | null>(null);
   const renameBusyRef = useRef(false);
   // Bumped when a rename starts and ends: an agent check that overlapped one
@@ -103,6 +107,8 @@ export default function ResumeViewerPage() {
   const { begin: beginRetry, isCurrent: isCurrentRetry } = useOperationOwner(resumeId);
   const { begin: beginRename, isCurrent: isCurrentRename } = useOperationOwner(resumeId);
   const { begin: beginDownload, isCurrent: isCurrentDownload } = useOperationOwner(resumeId);
+  const { begin: beginDocxDownload, isCurrent: isCurrentDocxDownload } =
+    useOperationOwner(resumeId);
   const { begin: beginDelete, isCurrent: isCurrentDelete } = useOperationOwner(resumeId);
   const { begin: beginSetDefault, isCurrent: isCurrentSetDefault } = useOperationOwner(resumeId);
   const { begin: beginDuplicate, isCurrent: isCurrentDuplicate } = useOperationOwner(resumeId);
@@ -117,6 +123,7 @@ export default function ResumeViewerPage() {
     setShowEnrichmentModal(false);
     setIsRetrying(false);
     setIsDownloading(false);
+    setIsDownloadingDocx(false);
     renameBusyRef.current = false;
     setIsEditingTitle(false);
     setEditingTitleValue('');
@@ -397,6 +404,34 @@ export default function ResumeViewerPage() {
     }
   };
 
+  const handleDownloadDocx = async () => {
+    const token = beginDocxDownload();
+    if (token === null) return;
+    setIsDownloadingDocx(true);
+    try {
+      setDownloadError(null);
+      const blob = await downloadResumeDocx(resumeId);
+      const filename = sanitizeFilename(resumeTitle, resumeId, 'resume', 'docx');
+      downloadBlobAsFile(blob, filename);
+      if (!isCurrentDocxDownload(token)) return;
+      toast.success(t('builder.alerts.downloadSuccess'));
+    } catch (err) {
+      if (!isCurrentDocxDownload(token)) return;
+      console.error('Failed to download resume DOCX:', err);
+      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+        const fallbackUrl = getResumeDocxUrl(resumeId);
+        const didOpen = openUrlInNewTab(fallbackUrl);
+        if (!didOpen) {
+          setDownloadError(t('common.popupBlocked', { url: fallbackUrl }));
+        }
+        return;
+      }
+      setDownloadError(t('resumeViewer.errors.failedToDownload'));
+    } finally {
+      if (isCurrentDocxDownload(token)) setIsDownloadingDocx(false);
+    }
+  };
+
   const handleDeleteResume = async () => {
     const token = beginDelete();
     if (token === null) return;
@@ -617,6 +652,15 @@ export default function ResumeViewerPage() {
           <Button type="button" variant="outline" onClick={handleDownload} disabled={isDownloading}>
             <DownloadSimple aria-hidden="true" />
             {isDownloading ? t('common.generating') : t('resumeViewer.downloadResume')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleDownloadDocx}
+            disabled={isDownloadingDocx || isDownloading}
+          >
+            <FileDoc aria-hidden="true" />
+            {isDownloadingDocx ? t('common.generating') : t('common.downloadDocx')}
           </Button>
         </PageHeader.Actions>
       </PageHeader>

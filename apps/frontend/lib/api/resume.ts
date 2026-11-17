@@ -465,6 +465,21 @@ export async function downloadResumePdf(
   return await res.blob();
 }
 
+/** URL of the ATS-friendly Word export (no template settings: it is one column). */
+export function getResumeDocxUrl(resumeId: string): string {
+  const normalizedId = normalizeResumeId(resumeId);
+  return `${API_BASE}/resumes/${encodeURIComponent(normalizedId)}/docx`;
+}
+
+export async function downloadResumeDocx(resumeId: string): Promise<Blob> {
+  const res = await apiFetch(getResumeDocxUrl(resumeId));
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Failed to download resume DOCX (status ${res.status}): ${text}`);
+  }
+  return await res.blob();
+}
+
 /** Deletes a resume by ID */
 export async function deleteResume(resumeId: string): Promise<void> {
   const res = await apiDelete(`/resumes/${encodeURIComponent(resumeId)}`);

@@ -16,7 +16,9 @@ vi.mock('@/lib/api/resume', () => ({
   updateOutreachMessage: vi.fn(),
   downloadCoverLetterPdf: vi.fn(),
   downloadResumePdf: vi.fn(),
+  downloadResumeDocx: vi.fn(),
   getResumePdfUrl: vi.fn(() => ''),
+  getResumeDocxUrl: vi.fn(() => ''),
   getCoverLetterPdfUrl: vi.fn(() => ''),
   generateCoverLetter: vi.fn(),
   generateOutreachMessage: vi.fn(),
@@ -74,10 +76,44 @@ describe('builder resume download', () => {
     await waitFor(() => expect(fetchResume).toHaveBeenCalledWith('a'));
     await act(async () => {});
 
-    await act(async () => screen.getByRole('button', { name: /common\.download/ }).click());
+    await act(async () => screen.getByRole('button', { name: 'common.download' }).click());
 
     expect(downloadBlobAsFile).toHaveBeenCalledTimes(1);
     expect(await screen.findByText('builder.alerts.downloadSuccess')).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('downloads the Word export from its own button (#docx)', async () => {
+    vi.mocked(fetchResume).mockResolvedValue({
+      resume_id: 'a',
+      raw_resume: { processing_status: 'ready' },
+      processed_resume: {
+        personalInfo: { name: 'Ada' },
+        summary: '',
+        workExperience: [],
+        education: [],
+        personalProjects: [],
+        additional: {},
+      },
+    } as unknown as Awaited<ReturnType<typeof fetchResume>>);
+    const { downloadResumeDocx } = await import('@/lib/api/resume');
+    vi.mocked(downloadResumeDocx).mockResolvedValue(new Blob(['docx']));
+    const { ResumeBuilder } = await import('@/components/builder/resume-builder');
+    render(
+      <>
+        <ResumeBuilder />
+        <Toaster />
+      </>
+    );
+    await waitFor(() => expect(fetchResume).toHaveBeenCalledWith('a'));
+    await act(async () => {});
+
+    await act(async () => screen.getByRole('button', { name: 'common.downloadDocx' }).click());
+
+    expect(downloadResumeDocx).toHaveBeenCalledWith('a');
+    expect(downloadBlobAsFile).toHaveBeenCalledTimes(1);
+    const filename = vi.mocked(downloadBlobAsFile).mock.calls[0][1];
+    expect(filename.endsWith('.docx')).toBe(true);
+    expect(await screen.findByText('builder.alerts.downloadSuccess')).toBeInTheDocument();
   });
 });

@@ -23,6 +23,7 @@ import { ConfirmDialog, type ConfirmDialogProps } from '@/components/ui/confirm-
 import { toast } from '@/components/ui/toaster';
 import {
   DownloadSimple,
+  FileDoc,
   FloppyDisk,
   ArrowLeft,
   ArrowCounterClockwise,
@@ -35,8 +36,10 @@ import {
 import { PaginatedPreview } from '@/components/preview';
 import {
   downloadResumePdf,
+  downloadResumeDocx,
   downloadCoverLetterPdf,
   getResumePdfUrl,
+  getResumeDocxUrl,
   getCoverLetterPdfUrl,
   fetchResume,
   updateResume,
@@ -264,6 +267,7 @@ const ResumeBuilderContent = ({ agentMode = false }: ResumeBuilderProps) => {
   const [showLeaveWithLocalDraftDialog, setShowLeaveWithLocalDraftDialog] = useState(false);
   const [hasCurrentLocalDraft, setHasCurrentLocalDraft] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
   const [loadingState, setLoadingState] = useState<'idle' | 'loading' | 'loaded' | 'error'>('idle');
   // The resume's own formatting, applied when it loads. A resume never formatted
   // keeps the defaults.
@@ -1322,6 +1326,44 @@ const ResumeBuilderContent = ({ agentMode = false }: ResumeBuilderProps) => {
     }
   };
 
+  const handleDownloadDocx = async () => {
+    if (!resumeId) {
+      showNotification(t('builder.alerts.downloadNotAvailable'), 'warning');
+      return;
+    }
+    // The document is built from the saved data, so flush first.
+    const didSave = await flushResumeChanges(true);
+    if (!didSave) {
+      return;
+    }
+    try {
+      setIsDownloadingDocx(true);
+      const blob = await downloadResumeDocx(resumeId);
+      const company = getCompanyFromTitle(resumeTitle);
+      const userName = resumeData.personalInfo?.name?.trim() || null;
+      const filename = buildResumeFilename(userName, company, resumeId, 'resume', 'docx');
+      downloadBlobAsFile(blob, filename);
+      toast.success(t('builder.alerts.downloadSuccess'));
+    } catch (error) {
+      console.error('Failed to download resume DOCX:', error);
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        const fallbackUrl = getResumeDocxUrl(resumeId);
+        const didOpen = openUrlInNewTab(fallbackUrl);
+        if (!didOpen) {
+          showNotification(t('common.popupBlocked', { url: fallbackUrl }), 'warning');
+        }
+        return;
+      }
+      let errorMessage = t('builder.alerts.downloadFailed');
+      if (error instanceof Error && error.message) {
+        errorMessage = `${t('builder.alerts.downloadFailed')}: ${error.message}`;
+      }
+      showNotification(errorMessage, 'danger');
+    } finally {
+      setIsDownloadingDocx(false);
+    }
+  };
+
   // Cover letter handlers
   const queueAttachmentWrite = <T,>(
     queue: React.RefObject<Promise<void>>,
@@ -1779,6 +1821,15 @@ const ResumeBuilderContent = ({ agentMode = false }: ResumeBuilderProps) => {
                 >
                   <DownloadSimple aria-hidden="true" />
                   {isDownloading ? t('common.generating') : t('common.download')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadDocx}
+                  disabled={!resumeId || isDownloadingDocx}
+                >
+                  <FileDoc aria-hidden="true" />
+                  {isDownloadingDocx ? t('common.generating') : t('common.downloadDocx')}
                 </Button>
               </>
             )}
