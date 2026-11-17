@@ -729,6 +729,7 @@ async def generate_resume_diffs(
     skill_targets: list[dict[str, Any]] | None = None,
     *,
     fixed_row_sections: tuple[str, ...] = (),
+    domain_pack_section: str = "",
 ) -> ImproveDiffResult:
     """Generate targeted resume diffs via LLM.
 
@@ -745,6 +746,8 @@ async def generate_resume_diffs(
         skill_targets: Verified skill targets from the planning pass
         fixed_row_sections: Sections whose bullet set the harness already chose;
             the prompt tells the LLM not to append bullets to them
+        domain_pack_section: Vocabulary block (see ``prompts/domain_packs.py``);
+            empty means no pack
 
     Returns:
         ImproveDiffResult with list of changes and strategy notes
@@ -785,6 +788,7 @@ async def generate_resume_diffs(
         skill_targets=_prepare_skill_targets_for_prompt(skill_targets),
         job_description=sanitized_jd,
         original_resume=resume_input,
+        domain_pack_section=domain_pack_section or "",
     )
 
     config = get_llm_config()
@@ -1086,6 +1090,8 @@ async def improve_resume(
     language: str = "en",
     prompt_id: str | None = None,
     original_resume_data: dict[str, Any] | None = None,
+    *,
+    domain_pack_section: str = "",
 ) -> dict[str, Any]:
     """Improve resume to better match job description.
 
@@ -1097,6 +1103,7 @@ async def improve_resume(
         prompt_id: Which tailor prompt to use
         original_resume_data: Structured resume JSON; used instead of
             markdown when available for higher-fidelity LLM input
+        domain_pack_section: Vocabulary block; empty means no pack
 
     Returns:
         Improved resume data matching ResumeData schema
@@ -1145,6 +1152,7 @@ async def improve_resume(
         schema=IMPROVE_SCHEMA_EXAMPLE,
         output_language=output_language,
         critical_truthfulness_rules=truthfulness_rules,
+        domain_pack_section=domain_pack_section or "",
     )
 
     result = await complete_json(

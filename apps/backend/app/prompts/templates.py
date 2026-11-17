@@ -247,7 +247,7 @@ IMPROVE_RESUME_PROMPT_NUDGE = """Lightly nudge this resume toward the job descri
 
 {critical_truthfulness_rules}
 
-IMPORTANT: Generate ALL text content (summary, descriptions, skills) in {output_language}.
+{domain_pack_section}IMPORTANT: Generate ALL text content (summary, descriptions, skills) in {output_language}.
 Do NOT include personalInfo in your output - it will be preserved from the original resume.
 
 Rules:
@@ -279,7 +279,7 @@ IMPROVE_RESUME_PROMPT_KEYWORDS = """Enhance this resume with relevant keywords f
 
 {critical_truthfulness_rules}
 
-IMPORTANT: Generate ALL text content (summary, descriptions, skills) in {output_language}.
+{domain_pack_section}IMPORTANT: Generate ALL text content (summary, descriptions, skills) in {output_language}.
 Do NOT include personalInfo in your output - it will be preserved from the original resume.
 
 Rules:
@@ -309,7 +309,7 @@ IMPROVE_RESUME_PROMPT_FULL = """Tailor this resume for the job. Output ONLY the 
 
 {critical_truthfulness_rules}
 
-IMPORTANT: Generate ALL text content (summary, descriptions, skills) in {output_language}.
+{domain_pack_section}IMPORTANT: Generate ALL text content (summary, descriptions, skills) in {output_language}.
 Do NOT include personalInfo in your output - it will be preserved from the original resume.
 
 Rules:
@@ -341,7 +341,7 @@ IMPROVE_RESUME_PROMPT_HEAVY = """Rewrite this resume for the job. Output ONLY th
 
 {critical_truthfulness_rules}
 
-IMPORTANT: Generate ALL text content (summary, descriptions, skills) in {output_language}.
+{domain_pack_section}IMPORTANT: Generate ALL text content (summary, descriptions, skills) in {output_language}.
 Do NOT include personalInfo in your output - it will be preserved from the original resume.
 
 Rules:
@@ -637,7 +637,7 @@ Output this exact JSON format:
 
 DIFF_IMPROVE_PROMPT = """Given this resume and job description, output a JSON object with targeted changes to better align the resume with the job.
 
-RULES:
+{domain_pack_section}RULES:
 1. Only modify content; never change names, companies, dates, institutions, or degrees
 2. Do not invent metrics or achievements not supported by the original resume text
 3. Do not add new work entries, education entries, or project entries

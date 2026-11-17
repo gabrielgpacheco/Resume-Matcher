@@ -1192,6 +1192,24 @@
       "description": "Choose the default prompt used for resume tailoring.",
       "defaultLabel": "Default tailoring prompt"
     },
+    "domainPack": {
+      "title": "Domain vocabulary",
+      "description": "Adds field vocabulary to tailoring when the job calls for it. It only changes wording, never adds experience.",
+      "options": {
+        "auto": {
+          "label": "Automatic",
+          "description": "Use a pack when the job description clearly belongs to it."
+        },
+        "off": {
+          "label": "Off",
+          "description": "Never add domain vocabulary."
+        },
+        "wordpress": {
+          "label": "WordPress / PHP / WooCommerce",
+          "description": "Use WordPress, WooCommerce and PHP terms when phrasing work the resume already shows."
+        }
+      }
+    },
     "footer": {
       "status": {
         "checking": "Checking...",

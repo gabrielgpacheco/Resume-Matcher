@@ -351,10 +351,13 @@ export interface PromptOption {
 export interface PromptConfig {
   default_prompt_id: string;
   prompt_options: PromptOption[];
+  domain_pack: string;
+  domain_pack_options: PromptOption[];
 }
 
 export interface PromptConfigUpdate {
   default_prompt_id?: string;
+  domain_pack?: string;
 }
 
 // Fetch prompt configuration

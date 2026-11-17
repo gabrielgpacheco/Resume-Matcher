@@ -97,6 +97,7 @@ from app.services.docx_export import (
     build_resume_docx,
     has_renderable_content,
 )
+from app.services.domain_pack import domain_pack_prompt_for
 from app.services.gap_interview import (
     MAX_QUESTIONS,
     answered_keywords,
@@ -1419,6 +1420,8 @@ async def _improve_preview_flow(
         await _cache_job_keywords(request.job_id, content_hash, job_keywords)
     progress["stage"] = "load_original_resume"
     original_resume_data = _get_original_resume_data(resume)
+    # One block for both the diff path and the full-output fallback.
+    domain_pack_section = domain_pack_prompt_for(job["content"])
     # Collect warnings throughout the process
     response_warnings: list[str] = []
     allow_appended_rows = False
@@ -1489,6 +1492,7 @@ async def _improve_preview_flow(
             original_resume_data=original_resume_data,
             skill_targets=skill_targets,
             fixed_row_sections=fixed_row_sections,
+            domain_pack_section=domain_pack_section,
         )
 
         progress["stage"] = "apply_resume_diffs"
@@ -1539,6 +1543,7 @@ async def _improve_preview_flow(
             language=language,
             prompt_id=prompt_id,
             original_resume_data=original_resume_data,
+            domain_pack_section=domain_pack_section,
         )
 
     progress["stage"] = "preserve_source_fields"
@@ -2216,6 +2221,7 @@ async def execute_tailoring_pipeline(
 
     effective_prompt_id = prompt_id or _get_default_prompt_id()
     original_resume_data = _get_original_resume_data(resume)
+    domain_pack_section = domain_pack_prompt_for(job["content"])
     response_warnings: list[str] = []
     allow_appended_rows = False
 
@@ -2228,6 +2234,7 @@ async def execute_tailoring_pipeline(
             language=language,
             prompt_id=effective_prompt_id,
             original_resume_data=original_resume_data,
+            domain_pack_section=domain_pack_section,
         )
 
         improved_data, applied_changes, rejected_changes = apply_diffs(
@@ -2267,6 +2274,7 @@ async def execute_tailoring_pipeline(
             language=language,
             prompt_id=effective_prompt_id,
             original_resume_data=original_resume_data,
+            domain_pack_section=domain_pack_section,
         )
 
     # Safety nets (defense in depth)

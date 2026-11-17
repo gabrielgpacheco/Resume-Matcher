@@ -34,6 +34,13 @@ from app.prompts import (
     IMPROVE_PROMPT_OPTIONS,
     validate_prompt_placeholders,
 )
+from app.prompts.domain_packs import (
+    AUTO_DOMAIN_PACK,
+    DEFAULT_DOMAIN_PACK_SETTING,
+    DOMAIN_PACKS,
+    NO_DOMAIN_PACK,
+    domain_pack_options,
+)
 from app.prompts.templates import COVER_LETTER_PROMPT, OUTREACH_MESSAGE_PROMPT
 from app.schemas import (
     ApiKeyProviderStatus,
@@ -447,7 +454,25 @@ async def get_prompt_config() -> PromptConfigResponse:
     return PromptConfigResponse(
         default_prompt_id=default_prompt_id,
         prompt_options=options,
+        domain_pack=_stored_domain_pack(stored),
+        domain_pack_options=_get_domain_pack_options(),
     )
+
+
+def _get_domain_pack_options() -> list[PromptOption]:
+    return [PromptOption(**option) for option in domain_pack_options()]
+
+
+def _allowed_domain_packs() -> set[str]:
+    return {AUTO_DOMAIN_PACK, NO_DOMAIN_PACK, *DOMAIN_PACKS}
+
+
+def _stored_domain_pack(stored: dict) -> str:
+    """Return the stored domain pack, falling back when the value is unknown."""
+    value = stored.get("domain_pack", DEFAULT_DOMAIN_PACK_SETTING)
+    if isinstance(value, str) and value in _allowed_domain_packs():
+        return value
+    return DEFAULT_DOMAIN_PACK_SETTING
 
 
 @router.put("/prompts", response_model=PromptConfigResponse)
@@ -470,6 +495,18 @@ async def update_prompt_config(
             )
         stored["default_prompt_id"] = request.default_prompt_id
 
+    if request.domain_pack is not None:
+        if request.domain_pack not in _allowed_domain_packs():
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Unsupported domain pack: "
+                    f"{request.domain_pack}. Supported: "
+                    f"{sorted(_allowed_domain_packs())}"
+                ),
+            )
+        stored["domain_pack"] = request.domain_pack
+
     _save_config(stored)
 
     default_prompt_id = stored.get("default_prompt_id", DEFAULT_IMPROVE_PROMPT_ID)
@@ -479,6 +516,8 @@ async def update_prompt_config(
     return PromptConfigResponse(
         default_prompt_id=default_prompt_id,
         prompt_options=options,
+        domain_pack=_stored_domain_pack(stored),
+        domain_pack_options=_get_domain_pack_options(),
     )
 
 

@@ -119,6 +119,7 @@ Models served over `/chat/completions` on that gateway (e.g. `glm-5.3-flash`, `g
 | 2026-11-16 | feature | Import a job description from a URL (JSON-LD `JobPosting` + HTML fallback) on the tailor page. |
 | 2026-11-17 | feature | Gap interview: the tailor page asks about job keywords your master resume does not show and only applies what you confirm; a "no" answer becomes a study suggestion. Answers are remembered per job. |
 | 2026-11-17 | feature | Export any resume as an ATS-friendly Word document (`.docx`): one column, real headings, no tables, same section order/visibility and bullet styles as the viewer. Available from the resume viewer and the builder. |
+| 2026-11-17 | feature | Domain vocabulary packs: an optional WordPress/PHP/WooCommerce vocabulary pack for tailoring, detected from the job description or forced in Settings. It only rephrases evidence the resume already shows; missing requirements stay in the gap interview. |
 
 ## Sponsors
 

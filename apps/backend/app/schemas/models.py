@@ -1077,6 +1077,7 @@ class PromptConfigRequest(BaseModel):
     """Request to update prompt settings."""
 
     default_prompt_id: str | None = None
+    domain_pack: str | None = None
 
 
 class PromptConfigResponse(BaseModel):
@@ -1084,6 +1085,8 @@ class PromptConfigResponse(BaseModel):
 
     default_prompt_id: str
     prompt_options: list[PromptOption]
+    domain_pack: str = "auto"
+    domain_pack_options: list[PromptOption] = Field(default_factory=list)
 
 
 class FeaturePromptsRequest(BaseModel):

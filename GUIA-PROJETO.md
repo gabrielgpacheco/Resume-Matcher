@@ -354,6 +354,18 @@ Decisões: A4 fixo, sem parâmetros de template; ordem e visibilidade vêm de `s
 **Aceite:** com o pack ativo, os bullets usam o vocabulário da vaga; o teste de "fact violations"
 (`services/writing_quality.py`) continua limpo.
 
+**Implementada:** `prompts/domain_packs.py` (registro `DomainPack`, `detect_domain_pack`,
+`resolve_domain_pack`, `domain_pack_prompt`, `domain_pack_options`) e
+`services/domain_pack.py` (lê `domain_pack` do config). Novo placeholder
+`{domain_pack_section}` em `DIFF_IMPROVE_PROMPT` e nos quatro `IMPROVE_RESUME_PROMPT_*`, preenchido
+em `generate_resume_diffs`/`improve_resume` (preview e pipeline do agente).
+`GET/PUT /api/v1/config/prompts` passam a expor `domain_pack` (`auto` padrão, `off`, ou id de pack)
+e `domain_pack_options`; tela de Configurações ganhou o seletor "Vocabulário de domínio" com i18n
+nos 7 locales. Detecção: um termo forte (`wordpress`, `woocommerce`, `gutenberg`, ...) ou três termos
+genéricos (`php`, `composer`, `mysql`, ...). Decisões: o pack não altera contagem/estrutura de
+bullets e o bloco de prompt proíbe explicitamente afirmar ferramenta, plugin, métrica ou
+responsabilidade ausente; lacunas continuam sendo tratadas pela entrevista de 6.2.
+
 ### 6.5 `feat/pt-br-review` — revisão de português do Brasil
 
 **Objetivo:** garantir pt-BR nativo, não português de Portugal.
@@ -534,7 +546,7 @@ Considere a entrega concluída quando:
 - [x] `feat/job-url` concluída
 - [x] `feat/gap-interview` concluída
 - [x] `feat/docx-export` concluída
-- [ ] `feat/wp-prompt-pack` concluída
+- [x] `feat/wp-prompt-pack` concluída
 - [ ] `feat/pt-br-review` concluída
 - [ ] `feat/edit-mode-pt-br` concluída
 - [ ] `start.ps1`, `sync-upstream.ps1` e `setup.ps1` funcionando
