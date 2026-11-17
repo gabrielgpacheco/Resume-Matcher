@@ -116,6 +116,7 @@ Models served over `/chat/completions` on that gateway (e.g. `glm-5.3-flash`, `g
 | 2026-11-16 | improvement | Enable `response_format` JSON mode for the Go gateway (verified against the live endpoint). |
 | 2026-11-16 | tooling | Added `setup.ps1`, `start.ps1`, `sync-upstream.ps1`. |
 | 2026-11-16 | security | Ignore uploaded resume PDFs/DOCX in `.gitignore` (personal data is never committed). |
+| 2026-11-16 | feature | Import a job description from a URL (JSON-LD `JobPosting` + HTML fallback) on the tailor page. |
 
 ## Sponsors
 
