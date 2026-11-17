@@ -329,6 +329,14 @@ integração.
 **Aceite:** o arquivo abre no Word/LibreOffice, o texto é extraível, a ordem das seções está
 correta e nenhum caractere é perdido.
 
+**Implementada:** `services/docx_export.py` (`build_resume_docx`, `has_renderable_content`,
+`format_date_range`, `group_skills`), endpoint `GET /api/v1/resumes/{resume_id}/docx` (404 sem
+currículo, 409 sem dados renderizáveis), botões no visualizador de currículo e no construtor,
+`downloadResumeDocx`/`getResumeDocxUrl` no cliente, testes unitários e de integração (25).
+Decisões: A4 fixo, sem parâmetros de template; ordem e visibilidade vêm de `sectionMeta`;
+`descriptionStyles` decide entre marcador e linha simples; formatação inline
+(negrito/itálico/sublinhado) vira runs reais do Word.
+
 ### 6.4 `feat/wp-prompt-pack` — vocabulário WordPress/PHP
 
 **Objetivo:** melhorar aderência a vagas de WordPress/PHP no mercado brasileiro.
@@ -525,7 +533,7 @@ Considere a entrega concluída quando:
 - [ ] Ciclo completo validado: upload → vaga → tailoring → revisão → PDF
 - [x] `feat/job-url` concluída
 - [x] `feat/gap-interview` concluída
-- [ ] `feat/docx-export` concluída
+- [x] `feat/docx-export` concluída
 - [ ] `feat/wp-prompt-pack` concluída
 - [ ] `feat/pt-br-review` concluída
 - [ ] `feat/edit-mode-pt-br` concluída

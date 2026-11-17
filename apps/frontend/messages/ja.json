@@ -7,6 +7,7 @@
     "delete": "削除",
     "edit": "編集",
     "download": "ダウンロード",
+    "downloadDocx": "Word（.docx）",
     "loading": "読み込み中...",
     "uploading": "アップロード中...",
     "checking": "確認中...",

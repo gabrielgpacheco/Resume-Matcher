@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sanitizeFilename } from '@/lib/utils/download';
+import { buildResumeFilename, sanitizeFilename } from '@/lib/utils/download';
 
 describe('sanitizeFilename', () => {
   describe('Basic functionality', () => {
@@ -251,6 +251,12 @@ describe('sanitizeFilename', () => {
       const result = sanitizeFilename(null, 'id');
       expect(result).toBe('resume_id.pdf');
     });
+
+    it('should use the docx extension when asked', () => {
+      expect(sanitizeFilename('Test', 'id', 'resume', 'docx')).toBe('Test.docx');
+      expect(sanitizeFilename(null, 'id', 'resume', 'docx')).toBe('resume_id.docx');
+      expect(sanitizeFilename(null, 'id', 'cover-letter', 'docx')).toBe('cover_letter_id.docx');
+    });
   });
 
   describe('Unicode normalization', () => {
@@ -400,5 +406,20 @@ describe('sanitizeFilename', () => {
       const graphemeCount = Array.from(result.slice(0, -4)).length;
       expect(graphemeCount).toBeLessThanOrEqual(100);
     });
+  });
+});
+
+describe('buildResumeFilename', () => {
+  it('builds a personalized PDF name by default', () => {
+    expect(buildResumeFilename('Ada Lovelace', 'Acme', 'id-1')).toBe(
+      'Ada Lovelace - Resume - Acme.pdf'
+    );
+  });
+
+  it('switches the extension to docx', () => {
+    expect(buildResumeFilename('Ada Lovelace', 'Acme', 'id-1', 'resume', 'docx')).toBe(
+      'Ada Lovelace - Resume - Acme.docx'
+    );
+    expect(buildResumeFilename(null, null, 'id-1', 'resume', 'docx')).toBe('resume_id-1.docx');
   });
 });
