@@ -15,6 +15,8 @@ from app.llm import (
     _get_retry_temperature,
     _normalize_api_base,
     _openai_compatible_supports_json_mode,
+    _opencode_go_headers,
+    _opencode_session_id,
     _supports_temperature,
     _uses_opencode_go_gateway,
     _uses_opencode_zen_hy3,
@@ -1207,6 +1209,39 @@ class TestOpenCodeGoGateway:
             api_base="https://opencode.ai/inference/go/openai/v1",
         )
         assert get_safe_max_tokens("openai/glm-5.3-flash", config=config) == 8192
+
+    def test_go_gateway_gets_json_mode(self):
+        config = _compatible(
+            model="glm-5.3-flash",
+            api_base="https://opencode.ai/inference/go/openai/v1",
+        )
+        assert _openai_compatible_supports_json_mode(config)
+
+    def test_json_mode_is_scoped_to_the_go_path(self):
+        # opencode.ai with a non-Go path must not get JSON mode, even for a Go
+        # model name. (Host-level allowlisting is not enough: only /inference/go
+        # and the Zen HY3 route are verified.)
+        config = _compatible(model="glm-5.3-flash", api_base="https://opencode.ai/v1")
+        assert not _openai_compatible_supports_json_mode(config)
+
+    def test_go_headers_include_session_and_user_agent(self):
+        config = _compatible(
+            model="glm-5.3-flash",
+            api_base="https://opencode.ai/inference/go/openai/v1",
+        )
+        headers = _opencode_go_headers(config)
+        assert headers is not None
+        assert "x-opencode-session" in headers
+        assert headers["User-Agent"].startswith("resume-matcher/")
+
+    def test_go_headers_none_for_other_configs(self):
+        assert (
+            _opencode_go_headers(_compatible(api_base="https://example.com/v1")) is None
+        )
+        assert _opencode_go_headers(_compatible(api_base=None)) is None
+
+    def test_go_session_id_is_stable_within_process(self):
+        assert _opencode_session_id() == _opencode_session_id()
 
 
 class TestJsonModeVerifiedHosts:

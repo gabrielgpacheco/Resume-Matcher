@@ -5,6 +5,7 @@ import json
 import logging
 import re
 import threading
+import uuid
 from collections.abc import Callable
 from functools import cache
 from types import ModuleType
@@ -13,6 +14,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 from pydantic import BaseModel, field_validator
 
+from app import __version__
 from app.ai_budget import remaining_timeout
 from app.ai_limits import validate_prompt_size
 from app.chatgpt_auth import ChatGPTNotConnectedError
@@ -365,20 +367,55 @@ def _uses_opencode_go_gateway(config: LLMConfig) -> bool:
     )
 
 
+@cache
+def _opencode_session_id() -> str:
+    """Return a stable per-process session ID for the OpenCode Go gateway.
+
+    The gateway rejects requests without ``x-opencode-session`` (400
+    ``MissingSessionID``) and uses the value to optimize routing and prompt
+    caching. A stable ID for the lifetime of the process keeps the large,
+    repeated system prompts cacheable across the many calls a tailoring run
+    makes.
+    """
+    return str(uuid.uuid4())
+
+
+def _opencode_go_headers(config: LLMConfig) -> dict[str, str] | None:
+    """Return the headers the OpenCode Go gateway requires, or ``None``.
+
+    The Go gateway mandates ``x-opencode-session`` and asks clients to identify
+    with their own User-Agent rather than a generic SDK/HTTP-library name.
+    Scoped to the Go gateway path so no other OpenAI-compatible server receives
+    these headers.
+    """
+    if not _uses_opencode_go_gateway(config):
+        return None
+    return {
+        "x-opencode-session": _opencode_session_id(),
+        "User-Agent": f"resume-matcher/{__version__}",
+    }
+
+
 def _openai_compatible_supports_json_mode(config: LLMConfig) -> bool:
     """Return whether a compatible endpoint is known to accept JSON mode.
 
     Custom OpenAI-compatible servers have no uniform capability-discovery API.
     Sending ``response_format`` to every one of them can turn a prompt-only
     JSON request that previously worked into a 400, so this stays an allowlist:
-    an endpoint qualifies only when its host is in ``JSON_MODE_VERIFIED_HOSTS``
-    or it is the OpenCode Zen HY3 route. Read the allowlist comment block above
-    those constants before adding an entry.
+    an endpoint qualifies only when its host is in ``JSON_MODE_VERIFIED_HOSTS``,
+    or it is the OpenCode Zen HY3 route, or it is the OpenCode Go gateway
+    (whose ``response_format={"type": "json_object"}`` support is verified with
+    a real request against the live endpoint). Read the allowlist comment block
+    above those constants before adding an entry.
     """
     if config.provider != "openai_compatible" or not isinstance(config.api_base, str):
         return False
     host = (urlsplit(config.api_base.strip()).hostname or "").lower()
-    return _uses_opencode_zen_hy3(config) or host in JSON_MODE_VERIFIED_HOSTS
+    return (
+        _uses_opencode_zen_hy3(config)
+        or _uses_opencode_go_gateway(config)
+        or host in JSON_MODE_VERIFIED_HOSTS
+    )
 
 
 OPENAI_API_HOST = "api.openai.com"
@@ -512,6 +549,12 @@ async def _route_acompletion(config: LLMConfig, transport: Any, **kwargs: Any) -
             "The API key is not confirmed for the saved Base URL. "
             "Re-enter the key in Settings."
         )
+    # The OpenCode Go gateway mandates x-opencode-session (400 MissingSessionID
+    # without it) and a non-generic User-Agent. Inject both for the Go gateway
+    # only; every other provider keeps its default transport headers.
+    go_headers = _opencode_go_headers(config)
+    if go_headers:
+        kwargs["extra_headers"] = go_headers
     if config.provider == "claude_cli":
         return await claude_acompletion(cli_model=config.model, **kwargs)
     if config.provider == "chatgpt":
