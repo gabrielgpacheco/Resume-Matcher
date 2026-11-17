@@ -1244,6 +1244,42 @@ class TestOpenCodeGoGateway:
         assert _opencode_session_id() == _opencode_session_id()
 
 
+class TestResolveApiKeyForOpenCodeGo:
+    """The env key is skipped for openai_compatible to protect local servers,
+    but the OpenCode Go gateway is hosted, so the env key must be used there."""
+
+    class _FakeSettings:
+        llm_provider = "openai_compatible"
+        llm_model = "glm-5.3-flash"
+        llm_api_key = "env-key"
+        reasoning_effort = None
+
+    def test_env_key_is_used_for_the_go_gateway(self, monkeypatch):
+        settings = self._FakeSettings()
+        settings.llm_api_base = "https://opencode.ai/inference/go/openai/v1"
+        monkeypatch.setattr("app.llm.settings", settings)
+        assert resolve_api_key({}, "openai_compatible") == "env-key"
+
+    def test_env_key_is_skipped_for_a_local_server(self, monkeypatch):
+        settings = self._FakeSettings()
+        settings.llm_api_base = "http://localhost:8080/v1"
+        monkeypatch.setattr("app.llm.settings", settings)
+        assert resolve_api_key({}, "openai_compatible") == ""
+
+    def test_env_key_is_skipped_for_a_lookalike_host(self, monkeypatch):
+        settings = self._FakeSettings()
+        settings.llm_api_base = "https://opencode.ai.evil.com/inference/go/openai/v1"
+        monkeypatch.setattr("app.llm.settings", settings)
+        assert resolve_api_key({}, "openai_compatible") == ""
+
+    def test_stored_key_still_wins_over_env(self, monkeypatch):
+        settings = self._FakeSettings()
+        settings.llm_api_base = "https://opencode.ai/inference/go/openai/v1"
+        monkeypatch.setattr("app.llm.settings", settings)
+        stored = {"api_keys": {"openai_compatible": "stored-key"}}
+        assert resolve_api_key(stored, "openai_compatible") == "stored-key"
+
+
 class TestJsonModeVerifiedHosts:
     """JSON mode is opt-in: only verified hosts (and Zen HY3) get it."""
 

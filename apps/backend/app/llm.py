@@ -343,6 +343,24 @@ def _uses_opencode_zen_hy3(config: LLMConfig) -> bool:
     )
 
 
+def _is_opencode_go_endpoint(api_base: str | None) -> bool:
+    """Return whether ``api_base`` targets the OpenCode Go subscription gateway.
+
+    Matches the exact host + path prefix (``opencode.ai`` + ``/inference/go``)
+    so a lookalike host or a merely prefixed path (``/inference/gopher``) never
+    matches.
+    """
+    if not api_base:
+        return False
+    parsed = urlsplit(api_base.strip())
+    if (parsed.hostname or "").lower() != OPENCODE_ZEN_HOST:
+        return False
+    path = parsed.path.rstrip("/")
+    return path == OPENCODE_GO_PATH_PREFIX or path.startswith(
+        f"{OPENCODE_GO_PATH_PREFIX}/"
+    )
+
+
 def _uses_opencode_go_gateway(config: LLMConfig) -> bool:
     """Return whether a request targets the OpenCode Go subscription gateway.
 
@@ -351,20 +369,10 @@ def _uses_opencode_go_gateway(config: LLMConfig) -> bool:
     subscription models, not public API models). They all accept a full
     ``DEFAULT_JSON_MAX_TOKENS`` output budget, so ``get_safe_max_tokens`` treats
     them like the Zen HY3 route instead of collapsing to ``FALLBACK_MAX_TOKENS``.
-
-    Scoped to the exact host + path prefix so an unrelated OpenAI-compatible
-    server on ``opencode.ai`` (or a lookalike path such as ``/inference/gopher``)
-    never inherits the higher fallback.
     """
     if config.provider != "openai_compatible" or not isinstance(config.api_base, str):
         return False
-    parsed = urlsplit(config.api_base.strip())
-    if (parsed.hostname or "").lower() != OPENCODE_ZEN_HOST:
-        return False
-    path = parsed.path.rstrip("/")
-    return path == OPENCODE_GO_PATH_PREFIX or path.startswith(
-        f"{OPENCODE_GO_PATH_PREFIX}/"
-    )
+    return _is_opencode_go_endpoint(config.api_base)
 
 
 @cache
@@ -851,7 +859,9 @@ def resolve_api_key(stored: dict, provider: str) -> str:
     default — EXCEPT for providers in ``_PROVIDERS_WITHOUT_ENV_KEY_FALLBACK``
     (``openai_compatible`` / ``ollama``), where the env-level default is
     skipped so a paid OpenAI key in ``LLM_API_KEY`` cannot leak to a local
-    self-hosted server when the user leaves the provider key blank.
+    self-hosted server when the user leaves the provider key blank. The
+    ``openai_compatible`` OpenCode Go gateway is the one exception: it is a
+    hosted endpoint, so the env key is used there.
 
     This is the single source of truth for key resolution. Every code path
     that needs an API key (runtime, config display, health check, test
@@ -864,11 +874,16 @@ def resolve_api_key(stored: dict, provider: str) -> str:
         if not isinstance(api_keys, dict):
             api_keys = {}
         config_provider = _PROVIDER_KEY_MAP.get(provider, provider)
-        env_default = (
-            ""
-            if provider in _PROVIDERS_WITHOUT_ENV_KEY_FALLBACK
-            else settings.llm_api_key
-        )
+        skip_env = provider in _PROVIDERS_WITHOUT_ENV_KEY_FALLBACK
+        # Exception: openai_compatible pointing at the OpenCode Go gateway is a
+        # hosted endpoint (opencode.ai/inference/go), not a local self-hosted
+        # server, so the env-level LLM_API_KEY is safe — and is exactly the key
+        # the user configured for that gateway.
+        if provider == "openai_compatible" and _is_opencode_go_endpoint(
+            stored.get("api_base") or settings.llm_api_base
+        ):
+            skip_env = False
+        env_default = "" if skip_env else settings.llm_api_key
         api_key = api_keys.get(config_provider, env_default)
     return api_key
 
