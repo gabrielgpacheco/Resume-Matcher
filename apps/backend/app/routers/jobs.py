@@ -14,7 +14,10 @@ from app.schemas import (
     JobQueueItemResponse,
     JobUploadRequest,
     JobUploadResponse,
+    JobUrlRequest,
+    JobUrlResponse,
 )
+from app.services.job_url import JobUrlError, fetch_job_from_url
 from app.services.queue_worker import extract_job_details, queue_manager
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
@@ -55,6 +58,27 @@ async def upload_job_descriptions(request: JobUploadRequest) -> JobUploadRespons
             "job_descriptions": request.job_descriptions,
             "resume_id": request.resume_id,
         },
+    )
+
+
+@router.post("/from-url", response_model=JobUrlResponse)
+async def fetch_job_from_url_endpoint(request: JobUrlRequest) -> JobUrlResponse:
+    """Fetch a job description from a URL (JSON-LD JobPosting or HTML fallback).
+
+    The returned ``content`` can be pasted straight into the tailoring textarea.
+    Sites that block automated access (LinkedIn, Indeed) return a 422 asking the
+    user to paste the text instead.
+    """
+    try:
+        job = await fetch_job_from_url(request.url)
+    except JobUrlError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    return JobUrlResponse(
+        content=job.content,
+        title=job.title,
+        company=job.company,
+        source=job.source,
     )
 
 

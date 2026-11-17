@@ -671,6 +671,21 @@ class JobUploadResponse(BaseModel):
     request: dict[str, Any]
 
 
+class JobUrlRequest(BaseModel):
+    """Request to fetch a job description from a URL."""
+
+    url: str
+
+
+class JobUrlResponse(BaseModel):
+    """A job description fetched from a URL."""
+
+    content: str
+    title: str = ""
+    company: str = ""
+    source: str = "url"
+
+
 # Improvement Models
 ResumeTemplate = Literal[
     "swiss-single",

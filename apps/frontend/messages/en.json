@@ -773,6 +773,11 @@
     "pasteJobDescription": "Paste Job Description",
     "pasteJobDescriptionBelow": "Paste Job Description Below",
     "jobDescriptionPlaceholder": "Paste the job description here...",
+    "jobUrlLabel": "Or paste a job URL",
+    "jobUrlPlaceholder": "https://jobs.example.com/role",
+    "jobUrlImport": "Import",
+    "jobUrlImporting": "Importing...",
+    "jobUrlImportError": "Couldn't import this job URL. Paste the job description text instead.",
     "promptLabel": "Tailoring intensity",
     "promptDescription": "Choose how strongly to align your resume to the job description.",
     "promptOptions": {

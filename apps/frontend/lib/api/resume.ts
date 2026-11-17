@@ -241,6 +241,25 @@ export async function uploadJobDescriptions(
   return data.job_id[0];
 }
 
+/** A job description fetched from a URL. */
+export interface JobFromUrl {
+  content: string;
+  title: string;
+  company: string;
+  source: string;
+}
+
+/** Fetches a job description from a URL (JSON-LD JobPosting or HTML fallback). */
+export async function fetchJobFromUrl(url: string): Promise<JobFromUrl> {
+  const res = await apiPost('/jobs/from-url', { url });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    const detail = parseErrorDetail(text);
+    throw new Error(detail ?? `Failed to fetch job from URL (status ${res.status})`);
+  }
+  return res.json();
+}
+
 /** Improves the resume and returns the full preview object */
 export async function improveResume(
   resumeId: string,

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, buttonClass } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label, labelClass } from '@/components/ui/label';
 import { Alert } from '@/components/ui/alert';
 import { PageFrame } from '@/components/ui/page-frame';
@@ -17,6 +18,7 @@ import type { ATSScore, ImprovedResult } from '@/components/common/resume_previe
 import type { ResumeData } from '@/components/dashboard/resume-component';
 import {
   uploadJobDescriptions,
+  fetchJobFromUrl,
   previewImproveResume,
   confirmImproveResume,
   applyKeywords,
@@ -70,6 +72,9 @@ export default function TailorPage() {
   const countedResumes = useRef(new Set<string>());
   const confirmationBusy = useRef(false);
   const [jobDescription, setJobDescription] = useState('');
+  const [jobUrl, setJobUrl] = useState('');
+  const [jobUrlBusy, setJobUrlBusy] = useState(false);
+  const [jobUrlError, setJobUrlError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [masterResumeId, setMasterResumeId] = useState<string | null>(null);
@@ -221,6 +226,23 @@ export default function TailorPage() {
 
   const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') e.stopPropagation();
+  };
+
+  const handleImportFromUrl = async () => {
+    const url = jobUrl.trim();
+    if (!url) return;
+    setJobUrlBusy(true);
+    setJobUrlError(null);
+    try {
+      const job = await fetchJobFromUrl(url);
+      setJobDescription(job.content);
+    } catch (err) {
+      setJobUrlError(
+        err instanceof Error && err.message ? err.message : t('tailor.jobUrlImportError')
+      );
+    } finally {
+      setJobUrlBusy(false);
+    }
   };
 
   const buildConfirmPayload = (result: ImprovedResult) => {
@@ -744,6 +766,31 @@ export default function TailorPage() {
               description={t('tailor.length.bulletsDescription')}
               disabled={isLoading}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="job-url">{t('tailor.jobUrlLabel')}</Label>
+            <div className="flex gap-2">
+              <Input
+                id="job-url"
+                type="url"
+                inputMode="url"
+                placeholder={t('tailor.jobUrlPlaceholder')}
+                value={jobUrl}
+                onChange={(e) => setJobUrl(e.target.value)}
+                disabled={isLoading || jobUrlBusy}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleImportFromUrl}
+                disabled={isLoading || jobUrlBusy || !jobUrl.trim()}
+                className="shrink-0"
+              >
+                {jobUrlBusy ? t('tailor.jobUrlImporting') : t('tailor.jobUrlImport')}
+              </Button>
+            </div>
+            {jobUrlError && <p className="text-sm text-destructive">{jobUrlError}</p>}
           </div>
 
           <div className="space-y-2">

@@ -773,6 +773,11 @@
     "pasteJobDescription": "Coller la fiche de poste",
     "pasteJobDescriptionBelow": "Collez la fiche de poste ci-dessous",
     "jobDescriptionPlaceholder": "Collez la fiche de poste ici...",
+    "jobUrlLabel": "Ou collez l'URL de l'offre",
+    "jobUrlPlaceholder": "https://emplois.exemple.com/poste",
+    "jobUrlImport": "Importer",
+    "jobUrlImporting": "Importation...",
+    "jobUrlImportError": "Impossible d'importer cette URL. Collez le texte de l'offre à la place.",
     "promptLabel": "Intensité de personnalisation",
     "promptDescription": "Choisissez dans quelle mesure aligner votre CV sur la fiche de poste.",
     "promptOptions": {

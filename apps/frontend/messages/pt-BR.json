@@ -773,6 +773,11 @@
     "pasteJobDescription": "Colar Descrição da Vaga",
     "pasteJobDescriptionBelow": "Cole a Descrição da Vaga Abaixo",
     "jobDescriptionPlaceholder": "Cole a descrição da vaga aqui...",
+    "jobUrlLabel": "Ou cole a URL da vaga",
+    "jobUrlPlaceholder": "https://vagas.exemplo.com/cargo",
+    "jobUrlImport": "Importar",
+    "jobUrlImporting": "Importando...",
+    "jobUrlImportError": "Não foi possível importar esta URL. Cole o texto da vaga em vez disso.",
     "promptLabel": "Intensidade de personalização",
     "promptDescription": "Escolha o quanto alinhar seu currículo à descrição da vaga.",
     "promptOptions": {

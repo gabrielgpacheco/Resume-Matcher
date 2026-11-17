@@ -773,6 +773,11 @@
     "pasteJobDescription": "Pegar Descripción del Trabajo",
     "pasteJobDescriptionBelow": "Pega la descripción del trabajo abajo",
     "jobDescriptionPlaceholder": "Pega la descripción del trabajo aquí...",
+    "jobUrlLabel": "O pega la URL de la oferta",
+    "jobUrlPlaceholder": "https://empleos.ejemplo.com/puesto",
+    "jobUrlImport": "Importar",
+    "jobUrlImporting": "Importando...",
+    "jobUrlImportError": "No se pudo importar esta URL. Pega el texto de la oferta en su lugar.",
     "promptLabel": "Intensidad de ajuste",
     "promptDescription": "Elige qué tanto alinear tu currículum con la descripción del puesto.",
     "promptOptions": {
