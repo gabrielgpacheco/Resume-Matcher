@@ -218,6 +218,28 @@ funcionando se o provedor devolver 400.
 
 **Aceite:** o ciclo completo funciona sem `response_warnings` críticos.
 
+### 5.4 Descobertas da execução (fixes extras aplicados)
+
+Durante a execução da Fase 1, dois problemas **fora do plano original** foram encontrados
+e corrigidos (branch `fix/llm-token-budget`):
+
+1. **O gateway Go exige o header `x-opencode-session`** — devolve `400 MissingSessionID`
+   sem ele. Não é "detalhe menor". Correção: `_route_acompletion` injeta
+   `extra_headers` (`x-opencode-session` + `User-Agent` próprio) apenas para o caminho
+   `opencode.ai/inference/go` (helper `_opencode_go_headers`).
+
+2. **A chave do `.env` era ignorada para `openai_compatible`** — `resolve_api_key` pula o
+   fallback de env para `openai_compatible`/`ollama` (proteção contra vazar chave paga para
+   servidor local). Correção: exceção escopada permite a chave de env quando o `api_base`
+   aponta para o gateway Go (`_is_opencode_go_endpoint`).
+
+3. `response_format={"type":"json_object"}` foi **verificado com requisição real** no gateway
+   e habilitado (`_openai_compatible_supports_json_mode` retorna `True` para o gateway Go).
+
+Validação real concluída: parse do CV (5 experiências, sem truncamento), tailoring `full`
+(ATS score 43.1, 9 mudanças rejeitadas pelo contrato anti-invenção — correto), PDF gerado
+e ATS parse check legível.
+
 ---
 
 ## 6. Fase 2 — Melhorias (uma branch por item)
