@@ -15,7 +15,6 @@ from app.ai_budget import (
     remaining_timeout,
 )
 from app.ai_limits import MAX_ITEM_WORKERS, PromptSizeError, require_source_size
-from app.config_cache import get_content_language
 from app.database import DatabaseBusyError, db
 from app.llm import complete_json
 from app.prompts.enrichment import (
@@ -40,6 +39,10 @@ from app.schemas.enrichment import (
     RegenerateItemInput,
     RegenerateRequest,
     RegenerateResponse,
+)
+from app.services.language_detection import (
+    resolve_resume_language,
+    resolve_text_language,
 )
 
 logger = logging.getLogger(__name__)
@@ -174,7 +177,7 @@ async def analyze_resume(resume_id: str) -> AnalysisResponse:
 
     # Build prompt with content language
     resume_json = json.dumps(processed_data)
-    language = get_content_language()
+    language = resolve_resume_language(processed_data)
     output_language = get_language_name(language)
     prompt = ANALYZE_RESUME_PROMPT.format(
         resume_json=resume_json, output_language=output_language
@@ -289,7 +292,7 @@ async def generate_enhancements(request: EnhanceRequest) -> EnhancementPreview:
     else:
         # Legacy path — re-analyze to get question-to-item mapping
         resume_json = json.dumps(processed_data)
-        language = get_content_language()
+        language = resolve_resume_language(processed_data)
         output_language = get_language_name(language)
         analysis_prompt = ANALYZE_RESUME_PROMPT.format(
             resume_json=resume_json,
@@ -378,7 +381,7 @@ async def generate_enhancements(request: EnhanceRequest) -> EnhancementPreview:
             else "(No description)"
         )
 
-        language = get_content_language()
+        language = resolve_resume_language(processed_data)
         output_language = get_language_name(language)
 
         prompt = ENHANCE_DESCRIPTION_PROMPT.format(
@@ -635,8 +638,15 @@ async def regenerate_items(request: RegenerateRequest) -> RegenerateResponse:
             status_code=400, detail="No items selected for regeneration"
         )
 
-    # Get language name for LLM
-    output_language = get_language_name(request.output_language)
+    # Language: an explicit choice wins, then the request, then the item text.
+    item_text = "\n".join(
+        part
+        for item in request.items
+        for part in (item.title, item.subtitle, *item.current_content)
+        if part
+    )
+    language = request.output_language or resolve_text_language(item_text)
+    output_language = get_language_name(language)
 
     # A bounded collection may queue work, but at most four items call AI.
     semaphore = asyncio.Semaphore(MAX_ITEM_WORKERS)

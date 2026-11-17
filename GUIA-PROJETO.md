@@ -424,6 +424,16 @@ prevalecendo sobre a detecção automática; a detecção só entra quando não 
 pt-BR; carregar o CV em inglês gera em inglês; escolha explícita de idioma em Settings segue
 respeitada; o teste de "fact violations" continua limpo.
 
+**Implementada:** `services/language_detection.py` (`detect_language_from_text`,
+`detect_resume_language`, `resolve_resume_language`, `resolve_text_language`) com heurística de
+stopwords pt-BR vs inglês, caracteres `ã/õ/ç` e acentos; `additional.languages` (idiomas falados)
+fica fora da amostra. `config_cache.explicit_content_language()` só considera escolha real
+(`content_language`/`language` no `config.json`), então o padrão `en` não bloqueia a detecção.
+`routers/enrichment.py` (analisar, melhorar e regenerar) e `routers/writing.py` (check e improve)
+passaram a resolver o idioma pelo currículo; `RegenerateRequest.output_language` virou opcional e o
+frontend deixou de enviar o padrão global. Settings continua prevalecendo quando o usuário escolhe
+um idioma.
+
 ---
 
 ## 7. Mapa do código (o que importa)
@@ -556,7 +566,7 @@ Considere a entrega concluída quando:
 - [x] `feat/docx-export` concluída
 - [x] `feat/wp-prompt-pack` concluída
 - [x] `feat/pt-br-review` concluída
-- [ ] `feat/edit-mode-pt-br` concluída
+- [x] `feat/edit-mode-pt-br` concluída
 - [ ] `start.ps1`, `sync-upstream.ps1` e `setup.ps1` funcionando
 - [ ] README do fork com instruções próprias e atribuição ao projeto original
 

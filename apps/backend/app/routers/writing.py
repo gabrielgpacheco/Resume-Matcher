@@ -12,7 +12,6 @@ from app.ai_budget import (
     remaining_timeout,
 )
 from app.ai_limits import PromptSizeError, require_source_size
-from app.config_cache import get_content_language
 from app.schemas.models import ResumeData
 from app.schemas.writing import (
     WritingChange,
@@ -21,6 +20,7 @@ from app.schemas.writing import (
     WritingImproveResponse,
 )
 from app.schemas.writing_report import WritingReport
+from app.services.language_detection import resolve_resume_language
 from app.services.progress import tracked_progress
 from app.services.resume_preservation import finalize_ai_resume
 from app.services.writing_loop import finalized_writing_report, run_writing_loop
@@ -43,7 +43,8 @@ def _changes(before: dict[str, Any], after: dict[str, Any]) -> list[WritingChang
 @router.post("/check", response_model=WritingReport)
 async def check_writing_endpoint(request: WritingCheckRequest) -> WritingReport:
     """Score a resume's writing with the code rules (no AI call)."""
-    return writing_report(request.resume_data.model_dump(), get_content_language())
+    data = request.resume_data.model_dump()
+    return writing_report(data, resolve_resume_language(data))
 
 
 @router.post("/improve", response_model=WritingImproveResponse)
@@ -57,7 +58,7 @@ async def improve_writing_endpoint(
     """
     source = request.resume_data.model_dump()
     require_source_size(source)
-    language = get_content_language()
+    language = resolve_resume_language(source)
     with tracked_progress(request.progress_id, "critique_writing") as progress:
         try:
             loop = await asyncio.wait_for(

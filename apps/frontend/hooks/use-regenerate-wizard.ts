@@ -14,6 +14,7 @@ import { useTranslations } from '@/lib/i18n';
 
 interface UseRegenerateWizardProps {
   resumeId: string;
+  /** Optional override; when omitted the backend uses the resume's language. */
   outputLanguage?: string;
   /** Refresh the acknowledged resume; reject if refresh fails so Retry can fetch again. */
   onSuccess?: () => void | Promise<void>;
@@ -61,7 +62,7 @@ interface UseRegenerateWizardReturn {
  */
 export function useRegenerateWizard({
   resumeId,
-  outputLanguage = 'en',
+  outputLanguage,
   onSuccess,
   onError,
 }: UseRegenerateWizardProps): UseRegenerateWizardReturn {
@@ -118,8 +119,8 @@ export function useRegenerateWizard({
         resume_id: resumeId,
         items: selectedItems,
         instruction: instruction || t('builder.regenerate.instructionDialog.defaultInstruction'),
-        output_language: outputLanguage,
       };
+      if (outputLanguage) request.output_language = outputLanguage;
 
       const response = await regenerateItemsApi(request);
       if (!isCurrent(token)) return;
