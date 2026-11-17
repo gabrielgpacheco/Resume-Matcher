@@ -1192,6 +1192,24 @@
       "description": "이력서 맞춤화에 사용할 기본 프롬프트를 선택하세요.",
       "defaultLabel": "기본 맞춤화 프롬프트"
     },
+    "domainPack": {
+      "title": "도메인 어휘",
+      "description": "채용 공고에 맞을 때 맞춤 설정에 분야 어휘를 추가합니다. 표현만 바꾸고 경험은 추가하지 않습니다.",
+      "options": {
+        "auto": {
+          "label": "자동",
+          "description": "공고가 해당 분야임이 분명할 때 팩을 사용합니다."
+        },
+        "off": {
+          "label": "사용 안 함",
+          "description": "도메인 어휘를 추가하지 않습니다."
+        },
+        "wordpress": {
+          "label": "WordPress / PHP / WooCommerce",
+          "description": "이력서에 이미 있는 업무를 표현할 때만 WordPress, WooCommerce, PHP 용어를 사용합니다."
+        }
+      }
+    },
     "footer": {
       "status": {
         "checking": "확인 중...",

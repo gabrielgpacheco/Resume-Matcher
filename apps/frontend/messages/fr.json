@@ -1192,6 +1192,24 @@
       "description": "Choisissez l'invite par défaut utilisée pour la personnalisation du CV.",
       "defaultLabel": "Invite de personnalisation par défaut"
     },
+    "domainPack": {
+      "title": "Vocabulaire métier",
+      "description": "Ajoute le vocabulaire du domaine lors de la personnalisation quand l'offre le demande. Cela change seulement la formulation, jamais l'expérience.",
+      "options": {
+        "auto": {
+          "label": "Automatique",
+          "description": "Utilise un pack quand l'offre appartient clairement au domaine."
+        },
+        "off": {
+          "label": "Désactivé",
+          "description": "N'ajoute jamais de vocabulaire métier."
+        },
+        "wordpress": {
+          "label": "WordPress / PHP / WooCommerce",
+          "description": "Utilise les termes WordPress, WooCommerce et PHP pour formuler le travail déjà présent dans le CV."
+        }
+      }
+    },
     "footer": {
       "status": {
         "checking": "Vérification...",

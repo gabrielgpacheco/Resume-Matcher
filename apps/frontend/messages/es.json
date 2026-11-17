@@ -1192,6 +1192,24 @@
       "description": "Elige el prompt predeterminado para personalizar el currículum.",
       "defaultLabel": "Prompt de personalización predeterminado"
     },
+    "domainPack": {
+      "title": "Vocabulario de dominio",
+      "description": "Añade vocabulario del área al personalizar cuando el puesto lo requiere. Solo cambia la redacción, nunca añade experiencia.",
+      "options": {
+        "auto": {
+          "label": "Automático",
+          "description": "Usa un paquete cuando la oferta pertenece claramente al área."
+        },
+        "off": {
+          "label": "Desactivado",
+          "description": "Nunca añade vocabulario de dominio."
+        },
+        "wordpress": {
+          "label": "WordPress / PHP / WooCommerce",
+          "description": "Usa términos de WordPress, WooCommerce y PHP para redactar el trabajo que el currículum ya muestra."
+        }
+      }
+    },
     "footer": {
       "status": {
         "checking": "Comprobando...",

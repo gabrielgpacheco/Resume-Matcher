@@ -387,6 +387,66 @@ class TestFeaturePrompts:
         assert data["outreach_message_prompt"] == ""
 
 
+class TestPromptConfig:
+    """GET/PUT /api/v1/config/prompts"""
+
+    @patch("app.routers.config._load_config")
+    async def test_get_defaults_domain_pack_to_auto(self, mock_load, client):
+        mock_load.return_value = {}
+        async with client:
+            resp = await client.get("/api/v1/config/prompts")
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["domain_pack"] == "auto"
+        option_ids = [option["id"] for option in data["domain_pack_options"]]
+        assert option_ids[:2] == ["auto", "off"]
+        assert "wordpress" in option_ids
+
+    @patch("app.routers.config._load_config")
+    async def test_get_returns_the_stored_domain_pack(self, mock_load, client):
+        mock_load.return_value = {"domain_pack": "wordpress"}
+        async with client:
+            resp = await client.get("/api/v1/config/prompts")
+
+        assert resp.json()["domain_pack"] == "wordpress"
+
+    @patch("app.routers.config._load_config")
+    async def test_get_ignores_an_unknown_domain_pack(self, mock_load, client):
+        mock_load.return_value = {"domain_pack": "drupal"}
+        async with client:
+            resp = await client.get("/api/v1/config/prompts")
+
+        assert resp.json()["domain_pack"] == "auto"
+
+    @patch("app.routers.config._save_config")
+    @patch("app.routers.config._load_config")
+    async def test_put_persists_the_domain_pack(self, mock_load, mock_save, client):
+        mock_load.return_value = {"default_prompt_id": "keywords"}
+        async with client:
+            resp = await client.put(
+                "/api/v1/config/prompts", json={"domain_pack": "wordpress"}
+            )
+
+        assert resp.status_code == 200
+        assert resp.json()["domain_pack"] == "wordpress"
+        assert mock_save.call_args.args[0]["domain_pack"] == "wordpress"
+
+    @patch("app.routers.config._save_config")
+    @patch("app.routers.config._load_config")
+    async def test_put_rejects_an_unknown_domain_pack(
+        self, mock_load, mock_save, client
+    ):
+        mock_load.return_value = {}
+        async with client:
+            resp = await client.put(
+                "/api/v1/config/prompts", json={"domain_pack": "drupal"}
+            )
+
+        assert resp.status_code == 400
+        mock_save.assert_not_called()
+
+
 class TestLanguageConfig:
     """GET/PUT /api/v1/config/language"""
 

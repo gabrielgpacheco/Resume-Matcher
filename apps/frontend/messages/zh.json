@@ -1192,6 +1192,24 @@
       "description": "选择用于简历定制的默认提示词。",
       "defaultLabel": "默认定制提示词"
     },
+    "domainPack": {
+      "title": "领域词汇",
+      "description": "当职位需要时，在定制中加入领域词汇。只改变措辞，绝不添加经历。",
+      "options": {
+        "auto": {
+          "label": "自动",
+          "description": "当职位描述明显属于该领域时使用词汇包。"
+        },
+        "off": {
+          "label": "关闭",
+          "description": "从不添加领域词汇。"
+        },
+        "wordpress": {
+          "label": "WordPress / PHP / WooCommerce",
+          "description": "仅在描述简历中已有工作时使用 WordPress、WooCommerce 和 PHP 术语。"
+        }
+      }
+    },
     "footer": {
       "status": {
         "checking": "检查中...",

@@ -1192,6 +1192,24 @@
       "description": "履歴書カスタマイズで使う既定のプロンプトを選択します。",
       "defaultLabel": "既定のカスタマイズプロンプト"
     },
+    "domainPack": {
+      "title": "ドメイン語彙",
+      "description": "求人に応じてカスタマイズに分野の語彙を加えます。表現だけを変え、経験は追加しません。",
+      "options": {
+        "auto": {
+          "label": "自動",
+          "description": "求人が明確にその分野の場合にパックを使います。"
+        },
+        "off": {
+          "label": "オフ",
+          "description": "ドメイン語彙を追加しません。"
+        },
+        "wordpress": {
+          "label": "WordPress / PHP / WooCommerce",
+          "description": "履歴書にすでにある業務を言い換えるときだけ WordPress、WooCommerce、PHP の用語を使います。"
+        }
+      }
+    },
     "footer": {
       "status": {
         "checking": "確認中...",

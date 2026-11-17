@@ -12,6 +12,8 @@ const api = vi.hoisted(() => ({
   fetchFeatureConfig: vi.fn(),
   testLlmConnection: vi.fn(),
   updateFeaturePrompts: vi.fn(),
+  fetchPromptConfig: vi.fn(),
+  updatePromptConfig: vi.fn(),
   refreshStatus: vi.fn(),
   setUiLanguage: vi.fn(),
   setContentLanguage: vi.fn(),
@@ -72,7 +74,8 @@ vi.mock('@/lib/api/config', async (importOriginal) => {
     testLlmConnection: api.testLlmConnection,
     fetchFeatureConfig: api.fetchFeatureConfig,
     updateFeaturePrompts: api.updateFeaturePrompts,
-    fetchPromptConfig: api.unavailable,
+    fetchPromptConfig: api.fetchPromptConfig,
+    updatePromptConfig: api.updatePromptConfig,
     fetchFeaturePrompts: api.unavailable,
   };
 });
@@ -105,6 +108,8 @@ beforeEach(() => {
   // Per-test overrides must not leak: reset to "unavailable" every time.
   api.fetchFeatureConfig.mockImplementation(api.unavailable);
   api.testLlmConnection.mockImplementation(api.unavailable);
+  api.fetchPromptConfig.mockImplementation(api.unavailable);
+  api.updatePromptConfig.mockImplementation(api.unavailable);
 });
 
 async function renderLoaded() {
@@ -843,5 +848,57 @@ describe('settings page (accessibility)', () => {
     expect(toggle).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByTestId('effects')).toHaveTextContent('true');
     expect(localStorage.getItem('resume_matcher_effects')).toBe('true');
+  });
+});
+
+describe('settings page domain vocabulary', () => {
+  const domainPackOptions = [
+    { id: 'auto', label: 'Automatic', description: 'Detect from the job' },
+    { id: 'off', label: 'Off', description: 'Never add vocabulary' },
+    {
+      id: 'wordpress',
+      label: 'WordPress / PHP / WooCommerce',
+      description: 'WordPress, WooCommerce and PHP terms',
+    },
+  ];
+
+  it('shows the stored pack and saves the chosen one', async () => {
+    api.fetchPromptConfig.mockResolvedValue({
+      default_prompt_id: 'keywords',
+      prompt_options: [],
+      domain_pack: 'auto',
+      domain_pack_options: domainPackOptions,
+    });
+    api.updatePromptConfig.mockResolvedValue({
+      default_prompt_id: 'keywords',
+      prompt_options: [],
+      domain_pack: 'wordpress',
+      domain_pack_options: domainPackOptions,
+    });
+    await renderLoaded();
+
+    expect(screen.getByText('settings.domainPack.title')).toBeInTheDocument();
+    const trigger = screen.getByRole('button', {
+      name: /settings\.domainPack\.title Automatic/,
+    });
+    fireEvent.click(trigger);
+    fireEvent.click(screen.getByRole('option', { name: /WordPress \/ PHP \/ WooCommerce/ }));
+
+    await waitFor(() =>
+      expect(api.updatePromptConfig).toHaveBeenCalledWith({ domain_pack: 'wordpress' })
+    );
+    expect(
+      screen.getByRole('button', {
+        name: /settings\.domainPack\.title WordPress \/ PHP \/ WooCommerce/,
+      })
+    ).toBeInTheDocument();
+  });
+
+  it('keeps the automatic default when the config call fails', async () => {
+    api.fetchPromptConfig.mockImplementation(api.unavailable);
+    await renderLoaded();
+
+    expect(screen.getByText('settings.domainPack.title')).toBeInTheDocument();
+    expect(screen.getByText('common.selectOption')).toBeInTheDocument();
   });
 });

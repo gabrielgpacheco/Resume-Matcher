@@ -213,6 +213,8 @@ export default function SettingsPage() {
   const [promptConfigLoading, setPromptConfigLoading] = useState(false);
   const [promptOptions, setPromptOptions] = useState<PromptOption[]>([]);
   const [defaultPromptId, setDefaultPromptId] = useState('keywords');
+  const [domainPack, setDomainPack] = useState('auto');
+  const [domainPackOptions, setDomainPackOptions] = useState<PromptOption[]>([]);
 
   // Custom feature prompts (cover letter, cold outreach). Empty string
   // means "use default"; the backend's *_default fields give us the
@@ -302,6 +304,20 @@ export default function SettingsPage() {
       return override ? { ...option, ...override } : option;
     });
   }, [promptOptions, fallbackPromptOptions, promptOptionOverrides]);
+  const localizedDomainPackOptions = useMemo(
+    () =>
+      domainPackOptions.map((option) => {
+        const key = `settings.domainPack.options.${option.id}`;
+        const label = t(`${key}.label`);
+        const description = t(`${key}.description`);
+        return {
+          ...option,
+          label: label === `${key}.label` ? option.label : label,
+          description: description === `${key}.description` ? option.description : description,
+        };
+      }),
+    [domainPackOptions, t]
+  );
   const healthDetailItems = useMemo(() => {
     if (!healthCheck) return [];
 
@@ -407,6 +423,8 @@ export default function SettingsPage() {
         if (promptConfig) {
           setPromptOptions(promptConfig.prompt_options || []);
           setDefaultPromptId(promptConfig.default_prompt_id || 'keywords');
+          setDomainPack(promptConfig.domain_pack || 'auto');
+          setDomainPackOptions(promptConfig.domain_pack_options || []);
         }
 
         if (featurePrompts) {
@@ -668,6 +686,23 @@ export default function SettingsPage() {
       }
     } catch (err) {
       console.error('Failed to update prompt config', err);
+      setError((err as Error).message || t('settings.errors.unableToSaveConfiguration'));
+    } finally {
+      setPromptConfigLoading(false);
+    }
+  };
+
+  const handleDomainPackChange = async (value: string) => {
+    setPromptConfigLoading(true);
+    setError(null);
+    try {
+      const updated = await updatePromptConfig({ domain_pack: value });
+      setDomainPack(updated.domain_pack);
+      if (updated.domain_pack_options?.length) {
+        setDomainPackOptions(updated.domain_pack_options);
+      }
+    } catch (err) {
+      console.error('Failed to update domain pack', err);
       setError((err as Error).message || t('settings.errors.unableToSaveConfiguration'));
     } finally {
       setPromptConfigLoading(false);
@@ -1527,6 +1562,17 @@ export default function SettingsPage() {
                   onChange={handlePromptConfigChange}
                   label={t('settings.promptSettings.title')}
                   description={t('settings.promptSettings.description')}
+                  disabled={promptConfigLoading}
+                />
+              </div>
+
+              <div className="pt-4 border-t border-paper">
+                <Dropdown
+                  options={localizedDomainPackOptions}
+                  value={domainPack}
+                  onChange={handleDomainPackChange}
+                  label={t('settings.domainPack.title')}
+                  description={t('settings.domainPack.description')}
                   disabled={promptConfigLoading}
                 />
               </div>
